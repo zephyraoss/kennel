@@ -28,7 +28,16 @@
 		>
 	{/each}
 	{#if addingProject}
-		<form method="POST" action="?/createProject" use:enhance class="flex items-center gap-1">
+		<form
+			method="POST"
+			action="?/createProject"
+			use:enhance={() =>
+				async ({ result, update }) => {
+					if (result.type === 'redirect') addingProject = false;
+					await update();
+				}}
+			class="flex items-center gap-1"
+		>
 			<Input name="name" placeholder="Project name" class="h-8 w-40" required autofocus />
 			<Button type="submit" size="sm" variant="ghost">Add</Button>
 			<Button type="button" size="sm" variant="ghost" onclick={() => (addingProject = false)}
