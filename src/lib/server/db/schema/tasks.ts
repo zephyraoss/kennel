@@ -4,8 +4,11 @@ import { user } from './auth';
 
 export const TASK_STATUSES = ['open', 'done'] as const;
 export const TASK_PRIORITIES = ['none', 'low', 'medium', 'high'] as const;
+export const REPEAT_UNITS = ['day', 'week', 'month'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+export type RepeatUnit = (typeof REPEAT_UNITS)[number];
+export type Repeat = { every: RepeatUnit; interval: number };
 
 const now = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
 
@@ -36,6 +39,7 @@ export const task = sqliteTable(
 		status: text('status', { enum: TASK_STATUSES }).notNull().default('open'),
 		priority: text('priority', { enum: TASK_PRIORITIES }).notNull().default('none'),
 		dueAt: integer('due_at', { mode: 'timestamp_ms' }),
+		repeat: text('repeat', { mode: 'json' }).$type<Repeat>(),
 		completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(now).notNull(),
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })

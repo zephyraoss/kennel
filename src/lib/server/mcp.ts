@@ -71,7 +71,7 @@ const buildServer = (tasks: TaskService, principal: Principal) => {
 		'create_task',
 		{
 			description:
-				'Create a task. priority is none (default), low, medium, or high. dueAt is an ISO 8601 datetime. labels is a list of short strings. projectId must reference an existing project.',
+				'Create a task. priority is none (default), low, medium, or high. dueAt is an ISO 8601 datetime. labels is a list of short strings. projectId must reference an existing project. repeat makes the task recurring: { every: "day" | "week" | "month", interval: 1 }. Completing a repeating task creates the next instance, with dueAt advanced from the previous dueAt (or from now if it had none) until it lands in the future.',
 			inputSchema: taskInput
 		},
 		writing(async (input) => serializeTask(await tasks.create(input)))
@@ -81,7 +81,7 @@ const buildServer = (tasks: TaskService, principal: Principal) => {
 		'update_task',
 		{
 			description:
-				'Update fields on a task. Set status to "done" to complete it or "open" to reopen it. Omitted fields are left unchanged.',
+				'Update fields on a task. Set status to "done" to complete it or "open" to reopen it. Set repeat to null to stop a task recurring. Omitted fields are left unchanged.',
 			inputSchema: taskPatch.extend({ id: z.string() })
 		},
 		writing(async ({ id, ...patch }) => {
@@ -92,10 +92,16 @@ const buildServer = (tasks: TaskService, principal: Principal) => {
 
 	server.registerTool(
 		'complete_task',
-		{ description: 'Mark a task as done.', inputSchema: z.object({ id: z.string() }) },
+		{
+			description:
+				'Mark a task as done. If the task repeats, the next instance is created and returned as "next".',
+			inputSchema: z.object({ id: z.string() })
+		},
 		writing(async ({ id }) => {
-			const row = await tasks.update(id, { status: 'done' });
-			return row ? serializeTask(row) : null;
+			const result = await tasks.complete(id);
+			return result
+				? { ...serializeTask(result.row), next: result.next ? serializeTask(result.next) : null }
+				: null;
 		})
 	);
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import type { SerializedProject } from '$lib/server/tasks';
+	import type { SerializedProject, SerializedTask } from '$lib/server/tasks';
 
 	let {
 		projects,
@@ -9,7 +9,8 @@
 		priority = 'none',
 		dueAt = null,
 		labels = [],
-		projectId = null
+		projectId = null,
+		repeat = null
 	}: {
 		projects: SerializedProject[];
 		notes?: string | null;
@@ -17,6 +18,7 @@
 		dueAt?: string | null;
 		labels?: string[];
 		projectId?: string | null;
+		repeat?: SerializedTask['repeat'];
 	} = $props();
 
 	const dateValue = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
@@ -26,7 +28,7 @@
 
 <div class="grid gap-3">
 	<Textarea name="notes" placeholder="Notes" aria-label="Notes" rows={2} value={notes ?? ''} />
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
 		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Priority
 			<select name="priority" class={selectClass} value={priority}>
@@ -39,6 +41,15 @@
 		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Due
 			<Input name="dueAt" type="date" value={dateValue(dueAt)} />
+		</label>
+		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
+			Repeat
+			<select name="repeat" class={selectClass} value={repeat?.every ?? ''}>
+				<option value="">Never</option>
+				<option value="day">Daily</option>
+				<option value="week">Weekly</option>
+				<option value="month">Monthly</option>
+			</select>
 		</label>
 		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Labels

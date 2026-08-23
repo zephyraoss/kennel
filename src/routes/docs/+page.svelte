@@ -149,6 +149,7 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
   "status": "open",
   "priority": "medium",
   "dueAt": "2026-08-30T00:00:00.000Z",
+  "repeat": { "every": "week", "interval": 1 },
   "completedAt": null,
   "createdAt": "…",
   "updatedAt": "…"
@@ -166,6 +167,12 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
 						><td>Defaults to <code>none</code></td></tr
 					>
 					<tr><td><code>dueAt</code></td><td>ISO 8601 datetime or null</td><td></td></tr>
+					<tr
+						><td><code>repeat</code></td><td
+							><code>{'{ every: day | week | month, interval }'}</code> or null</td
+						><td>Completing the task creates the next instance with <code>dueAt</code> advanced</td
+						></tr
+					>
 					<tr><td><code>labels</code></td><td>string[]</td><td></td></tr>
 					<tr
 						><td><code>projectId</code></td><td>string or null</td><td

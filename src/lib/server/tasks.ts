@@ -2,6 +2,7 @@ import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Database } from './db';
 import {
+	REPEAT_UNITS,
 	TASK_PRIORITIES,
 	TASK_STATUSES,
 	project,
@@ -9,14 +10,21 @@ import {
 	type Project,
 	type Task
 } from './db/schema/tasks';
+import { nextOccurrence } from './recurrence';
 
 const label = z.string().trim().min(1).max(50);
+
+export const repeatInput = z.object({
+	every: z.enum(REPEAT_UNITS),
+	interval: z.number().int().min(1).max(365).default(1)
+});
 
 export const taskInput = z.object({
 	title: z.string().trim().min(1).max(500),
 	notes: z.string().trim().max(10_000).nullable().optional(),
 	priority: z.enum(TASK_PRIORITIES).optional(),
 	dueAt: z.iso.datetime().nullable().optional(),
+	repeat: repeatInput.nullable().optional(),
 	labels: z.array(label).max(20).optional(),
 	projectId: z.string().nullable().optional()
 });
@@ -62,6 +70,7 @@ export const serializeTask = (t: Task) => ({
 	status: t.status,
 	priority: t.priority,
 	dueAt: t.dueAt?.toISOString() ?? null,
+	repeat: t.repeat ?? null,
 	completedAt: t.completedAt?.toISOString() ?? null,
 	createdAt: t.createdAt.toISOString(),
 	updatedAt: t.updatedAt.toISOString()
@@ -160,16 +169,37 @@ export const createTaskService = (db: Database, userId: string) => {
 				labels: input.labels ?? [],
 				projectId: input.projectId ?? null,
 				priority: input.priority ?? 'none',
-				dueAt: toDate(input.dueAt) ?? null
+				dueAt: toDate(input.dueAt) ?? null,
+				repeat: input.repeat ?? null
 			})
 			.returning();
 		return row;
 	};
 
-	const update = async (id: string, patch: TaskPatch) => {
+	const spawnNext = async (completed: Task, now: Date) => {
+		if (!completed.repeat) return null;
+		const [row] = await db
+			.insert(task)
+			.values({
+				id: crypto.randomUUID(),
+				userId,
+				title: completed.title,
+				notes: completed.notes,
+				labels: completed.labels,
+				projectId: completed.projectId,
+				priority: completed.priority,
+				dueAt: nextOccurrence(completed.dueAt, completed.repeat, now),
+				repeat: completed.repeat
+			})
+			.returning();
+		return row;
+	};
+
+	const apply = async (id: string, patch: TaskPatch) => {
 		await assertProject(patch.projectId);
-		const completedAt =
-			patch.status === 'done' ? new Date() : patch.status === 'open' ? null : undefined;
+		const now = new Date();
+		const completing = patch.status === 'done' && (await get(id))?.status === 'open';
+		const completedAt = patch.status === 'done' ? now : patch.status === 'open' ? null : undefined;
 		const [row] = await db
 			.update(task)
 			.set({
@@ -179,13 +209,19 @@ export const createTaskService = (db: Database, userId: string) => {
 				projectId: patch.projectId,
 				priority: patch.priority,
 				dueAt: toDate(patch.dueAt),
+				repeat: patch.repeat,
 				status: patch.status,
 				completedAt
 			})
 			.where(owned(id))
 			.returning();
-		return row ?? null;
+		if (!row) return null;
+		return { row, next: completing ? await spawnNext(row, now) : null };
 	};
+
+	const update = async (id: string, patch: TaskPatch) => (await apply(id, patch))?.row ?? null;
+
+	const complete = async (id: string) => apply(id, { status: 'done' });
 
 	const remove = async (id: string) => {
 		const rows = await db.delete(task).where(owned(id)).returning({ id: task.id });
@@ -218,6 +254,7 @@ export const createTaskService = (db: Database, userId: string) => {
 			priority: t.priority ?? 'none',
 			status: t.status ?? 'open',
 			dueAt: toDate(t.dueAt) ?? null,
+			repeat: t.repeat ?? null,
 			completedAt: toDate(t.completedAt) ?? null,
 			createdAt: toDate(t.createdAt) ?? new Date()
 		}));
@@ -230,7 +267,7 @@ export const createTaskService = (db: Database, userId: string) => {
 		return { projects: projectRows.length, tasks: taskRows.length };
 	};
 
-	return { list, get, create, update, remove, projects, exportAll, importAll };
+	return { list, get, create, update, complete, remove, projects, exportAll, importAll };
 };
 
 export type TaskService = ReturnType<typeof createTaskService>;

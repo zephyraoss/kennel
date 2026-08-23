@@ -44,6 +44,7 @@ const taskFields = (form: FormData) => ({
 	notes: optional(field(form, 'notes')),
 	priority: field(form, 'priority') || 'none',
 	dueAt: optional(field(form, 'dueAt')) && new Date(field(form, 'dueAt')).toISOString(),
+	repeat: optional(field(form, 'repeat')) && { every: field(form, 'repeat'), interval: 1 },
 	labels: parseLabels(field(form, 'labels')),
 	projectId: optional(field(form, 'projectId'))
 });

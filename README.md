@@ -38,7 +38,7 @@ Base path is `/api/v1`.
 
 `GET /tasks` filters on `?status=open|done`, `?projectId=`, and `?label=`. Projects follow the same shape at `/projects` (GET, POST) and `/projects/:id` (GET, PATCH, DELETE).
 
-A task has `title`, `notes`, `priority` (`none`, `low`, `medium`, or `high`), `dueAt` as an ISO 8601 string, `labels` as a string array, `projectId`, and `status` (`open` or `done`).
+A task has `title`, `notes`, `priority` (`none`, `low`, `medium`, or `high`), `dueAt` as an ISO 8601 string, `repeat` (`{ "every": "day" | "week" | "month", "interval": 1 }` or null), `labels` as a string array, `projectId`, and `status` (`open` or `done`). Completing a task with `repeat` set creates the next instance, with `dueAt` advanced from the previous one until it lands in the future.
 
 ## MCP
 

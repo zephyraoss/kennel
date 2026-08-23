@@ -39,6 +39,15 @@
 	};
 
 	const due = $derived(dueLabel(task.dueAt));
+
+	const repeatLabel: Record<string, string> = { day: 'Daily', week: 'Weekly', month: 'Monthly' };
+	const repeats = $derived(
+		task.repeat
+			? task.repeat.interval === 1
+				? repeatLabel[task.repeat.every]
+				: `Every ${task.repeat.interval} ${task.repeat.every}s`
+			: null
+	);
 </script>
 
 <li class="py-2.5 sm:py-2">
@@ -62,6 +71,7 @@
 				dueAt={task.dueAt}
 				labels={task.labels}
 				projectId={task.projectId}
+				repeat={task.repeat}
 			/>
 			{#if error}
 				<p role="alert" class="text-base text-destructive sm:text-sm">{error}</p>
@@ -112,7 +122,7 @@
 						{task.notes}
 					</div>
 				{/if}
-				{#if task.priority !== 'none' || due || task.labels.length || (showProject && projectName)}
+				{#if task.priority !== 'none' || due || repeats || task.labels.length || (showProject && projectName)}
 					<div
 						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground sm:text-xs"
 					>
@@ -125,6 +135,9 @@
 							<span class={due.overdue ? 'text-destructive' : ''}
 								>{due.text}{#if due.overdue}<span class="sr-only"> (overdue)</span>{/if}</span
 							>
+						{/if}
+						{#if repeats}
+							<span>{repeats}</span>
 						{/if}
 						{#each task.labels as label (label)}
 							<span class="rounded bg-muted px-1.5 py-0.5">{label}</span>

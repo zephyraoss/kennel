@@ -36,7 +36,8 @@ Devices and terminals that cannot open a browser redirect can use the device aut
 - PATCH /projects/:id
 - DELETE /projects/:id
 
-Task fields: title (required), notes, labels (string[]), projectId, status (open|done), priority (none|low|medium|high), dueAt (ISO 8601).
+Task fields: title (required), notes, labels (string[]), projectId, status (open|done), priority (none|low|medium|high), dueAt (ISO 8601), repeat ({ every: day|week|month, interval: n } or null).
+Completing a task with repeat set creates the next instance with dueAt advanced; complete_task returns it as "next".
 Errors return a non-2xx status with \`{ "error": { "code": "...", "message": "..." } }\`.
 
 ## MCP tools
