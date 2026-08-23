@@ -14,8 +14,7 @@
 <section class="mb-10">
 	<h2 class="mb-1 text-sm font-medium">Connected apps</h2>
 	<p class="mb-4 text-sm text-muted-foreground">
-		Apps you've authorized to use your tasks. Revoking signs the app out; it will have to ask for
-		access again.
+		Apps you've authorized to use your tasks. Revoking will stop the app from accessing your tasks.
 	</p>
 
 	{#if data.apps.length === 0}
