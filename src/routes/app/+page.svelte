@@ -17,7 +17,7 @@
 	const activeProject = $derived(data.projects.find((p) => p.id === data.activeProjectId) ?? null);
 
 	const tabClass = (active: boolean) =>
-		`rounded-md px-2 py-1 text-sm ${active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
+		`rounded-md px-2 py-1.5 text-base sm:py-1 sm:text-sm ${active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
 </script>
 
 <nav class="mb-6 flex flex-wrap items-center gap-1">
@@ -38,7 +38,7 @@
 				}}
 			class="flex items-center gap-1"
 		>
-			<Input name="name" placeholder="Project name" class="h-8 w-40" required autofocus />
+			<Input name="name" placeholder="Project name" class="h-8 w-36 sm:w-40" required autofocus />
 			<Button type="submit" size="sm" variant="ghost">Add</Button>
 			<Button type="button" size="sm" variant="ghost" onclick={() => (addingProject = false)}
 				>Cancel</Button
@@ -52,7 +52,7 @@
 	{#if activeProject}
 		<form method="POST" action="?/deleteProject" use:enhance class="ml-auto">
 			<input type="hidden" name="id" value={activeProject.id} />
-			<button type="submit" class="text-xs text-muted-foreground hover:text-destructive"
+			<button type="submit" class="text-sm text-muted-foreground hover:text-destructive sm:text-xs"
 				>Delete project</button
 			>
 		</form>
@@ -60,7 +60,7 @@
 </nav>
 
 {#if form?.action === 'createProject'}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
 {/if}
 
 <form
@@ -104,12 +104,12 @@
 		<input type="hidden" name="projectId" value={data.activeProjectId ?? ''} />
 	{/if}
 	{#if form?.action === 'create'}
-		<p class="mt-2 text-sm text-destructive">{form.message}</p>
+		<p class="mt-2 text-base text-destructive sm:text-sm">{form.message}</p>
 	{/if}
 </form>
 
 {#if open.length === 0 && done.length === 0}
-	<p class="text-sm text-muted-foreground">Nothing here yet.</p>
+	<p class="text-base text-muted-foreground sm:text-sm">Nothing here yet.</p>
 {/if}
 
 <ul class="divide-y">
@@ -124,7 +124,9 @@
 </ul>
 
 {#if done.length > 0}
-	<h2 class="mt-8 mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+	<h2
+		class="mt-8 mb-2 text-sm font-medium tracking-wide text-muted-foreground uppercase sm:text-xs"
+	>
 		Done ({done.length})
 	</h2>
 	<ul class="divide-y">

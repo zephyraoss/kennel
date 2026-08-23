@@ -14,7 +14,7 @@ For production, set the same four variables as worker secrets with `wrangler sec
 
 Every API and MCP request needs an API key or an OAuth access token.
 
-API keys come from the _API keys_ page in the dashboard. Send one as `Authorization: Bearer kn_...` or as `x-api-key: kn_...`. A key always has both `tasks:read` and `tasks:write`; there's no way to scope one down.
+API keys come from the _API keys_ page in the dashboard. Send one as `Authorization: Bearer kn_...` or as `x-api-key: kn_...`. A key always has both `tasks:read` and `tasks:write`. There's no way to scope one down.
 
 OAuth 2.1 is for clients that shouldn't hold a long-lived key. Register a client on the _OAuth_ page, or let the client register itself through dynamic client registration at `/api/auth/oauth2/register`. Then run the authorization-code flow with PKCE and send the resulting token as a bearer token. Scopes are `tasks:read` and `tasks:write`. Users can see and revoke authorized apps on the same page.
 

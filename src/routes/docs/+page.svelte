@@ -9,7 +9,7 @@
 </svelte:head>
 
 <main class="mx-auto max-w-2xl px-6 py-8">
-	<header class="mb-8 flex items-center justify-between text-sm">
+	<header class="mb-8 flex items-center justify-between text-base sm:text-sm">
 		<a href={resolve('/')} class="font-semibold">kennel</a>
 		<a
 			href={data.user ? resolve('/app') : resolve('/login')}
@@ -20,7 +20,7 @@
 	</header>
 
 	<article
-		class="prose prose-sm max-w-none prose-headings:font-semibold prose-pre:bg-muted prose-pre:text-foreground"
+		class="prose max-w-none sm:prose-sm prose-headings:font-semibold prose-pre:bg-muted prose-pre:text-foreground"
 	>
 		<h1>Docs</h1>
 		<p>
@@ -29,13 +29,15 @@
 		</p>
 
 		<h2>Endpoints</h2>
-		<table>
-			<tbody>
-				<tr><td>REST</td><td><code>{data.urls.api}</code></td></tr>
-				<tr><td>MCP</td><td><code>{data.urls.mcp}</code></td></tr>
-				<tr><td>OAuth issuer</td><td><code>{data.issuer}</code></td></tr>
-			</tbody>
-		</table>
+		<div class="-mx-6 overflow-x-auto px-6">
+			<table class="min-w-full">
+				<tbody>
+					<tr><td>REST</td><td><code>{data.urls.api}</code></td></tr>
+					<tr><td>MCP</td><td><code>{data.urls.mcp}</code></td></tr>
+					<tr><td>OAuth issuer</td><td><code>{data.issuer}</code></td></tr>
+				</tbody>
+			</table>
+		</div>
 
 		<h2>API keys</h2>
 		<p>
@@ -79,21 +81,23 @@
 		</p>
 
 		<h2>REST</h2>
-		<table>
-			<thead><tr><th>Method</th><th>Path</th><th>Scope</th></tr></thead>
-			<tbody>
-				<tr><td>GET</td><td><code>/tasks</code></td><td>tasks:read</td></tr>
-				<tr><td>POST</td><td><code>/tasks</code></td><td>tasks:write</td></tr>
-				<tr><td>GET</td><td><code>/tasks/:id</code></td><td>tasks:read</td></tr>
-				<tr><td>PATCH</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
-				<tr><td>DELETE</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
-				<tr><td>GET</td><td><code>/projects</code></td><td>tasks:read</td></tr>
-				<tr><td>POST</td><td><code>/projects</code></td><td>tasks:write</td></tr>
-				<tr><td>GET</td><td><code>/projects/:id</code></td><td>tasks:read</td></tr>
-				<tr><td>PATCH</td><td><code>/projects/:id</code></td><td>tasks:write</td></tr>
-				<tr><td>DELETE</td><td><code>/projects/:id</code></td><td>tasks:write</td></tr>
-			</tbody>
-		</table>
+		<div class="-mx-6 overflow-x-auto px-6">
+			<table class="min-w-full">
+				<thead><tr><th>Method</th><th>Path</th><th>Scope</th></tr></thead>
+				<tbody>
+					<tr><td>GET</td><td><code>/tasks</code></td><td>tasks:read</td></tr>
+					<tr><td>POST</td><td><code>/tasks</code></td><td>tasks:write</td></tr>
+					<tr><td>GET</td><td><code>/tasks/:id</code></td><td>tasks:read</td></tr>
+					<tr><td>PATCH</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
+					<tr><td>DELETE</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
+					<tr><td>GET</td><td><code>/projects</code></td><td>tasks:read</td></tr>
+					<tr><td>POST</td><td><code>/projects</code></td><td>tasks:write</td></tr>
+					<tr><td>GET</td><td><code>/projects/:id</code></td><td>tasks:read</td></tr>
+					<tr><td>PATCH</td><td><code>/projects/:id</code></td><td>tasks:write</td></tr>
+					<tr><td>DELETE</td><td><code>/projects/:id</code></td><td>tasks:write</td></tr>
+				</tbody>
+			</table>
+		</div>
 		<p>
 			<code>GET /tasks</code> accepts <code>status</code> (<code>open</code> or <code>done</code>),
 			<code>projectId</code>, and <code>label</code> query params.
@@ -114,25 +118,30 @@
   "updatedAt": "…"
 }`}</code
 			></pre>
-		<table>
-			<thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
-			<tbody>
-				<tr><td><code>title</code></td><td>string</td><td>Required on <code>POST</code></td></tr>
-				<tr><td><code>notes</code></td><td>string or null</td><td></td></tr>
-				<tr
-					><td><code>priority</code></td><td
-						><code>none</code> · <code>low</code> · <code>medium</code> · <code>high</code></td
-					><td>Defaults to <code>none</code></td></tr
-				>
-				<tr><td><code>dueAt</code></td><td>ISO 8601 datetime or null</td><td></td></tr>
-				<tr><td><code>labels</code></td><td>string[]</td><td></td></tr>
-				<tr
-					><td><code>projectId</code></td><td>string or null</td><td>Must be an existing project</td
-					></tr
-				>
-				<tr><td><code>status</code></td><td><code>open</code> · <code>done</code></td><td></td></tr>
-			</tbody>
-		</table>
+		<div class="-mx-6 overflow-x-auto px-6">
+			<table class="min-w-full">
+				<thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+				<tbody>
+					<tr><td><code>title</code></td><td>string</td><td>Required on <code>POST</code></td></tr>
+					<tr><td><code>notes</code></td><td>string or null</td><td></td></tr>
+					<tr
+						><td><code>priority</code></td><td
+							><code>none</code> · <code>low</code> · <code>medium</code> · <code>high</code></td
+						><td>Defaults to <code>none</code></td></tr
+					>
+					<tr><td><code>dueAt</code></td><td>ISO 8601 datetime or null</td><td></td></tr>
+					<tr><td><code>labels</code></td><td>string[]</td><td></td></tr>
+					<tr
+						><td><code>projectId</code></td><td>string or null</td><td
+							>Must be an existing project</td
+						></tr
+					>
+					<tr
+						><td><code>status</code></td><td><code>open</code> · <code>done</code></td><td></td></tr
+					>
+				</tbody>
+			</table>
+		</div>
 		<p>
 			On <code>PATCH</code> every field is optional and anything you leave out stays unchanged.
 		</p>

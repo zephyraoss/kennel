@@ -20,13 +20,14 @@
 	} = $props();
 
 	const dateValue = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
-	const selectClass = 'h-9 w-full rounded-md border bg-background px-2 text-sm';
+	const selectClass =
+		'h-9 w-full min-w-0 rounded-md border bg-background px-2 text-base sm:text-sm';
 </script>
 
 <div class="grid gap-3">
 	<Textarea name="notes" placeholder="Notes" rows={2} value={notes ?? ''} />
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		<label class="grid gap-1 text-xs text-muted-foreground">
+		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Priority
 			<select name="priority" class={selectClass} value={priority}>
 				<option value="none">None</option>
@@ -35,15 +36,15 @@
 				<option value="high">High</option>
 			</select>
 		</label>
-		<label class="grid gap-1 text-xs text-muted-foreground">
+		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Due
 			<Input name="dueAt" type="date" value={dateValue(dueAt)} />
 		</label>
-		<label class="grid gap-1 text-xs text-muted-foreground">
+		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Labels
 			<Input name="labels" placeholder="a, b" value={labels.join(', ')} />
 		</label>
-		<label class="grid gap-1 text-xs text-muted-foreground">
+		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Project
 			<select name="projectId" class={selectClass} value={projectId ?? ''}>
 				<option value="">None</option>

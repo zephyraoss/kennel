@@ -41,7 +41,7 @@
 	const due = $derived(dueLabel(task.dueAt));
 </script>
 
-<li class="py-2">
+<li class="py-2.5 sm:py-2">
 	{#if editing}
 		<form
 			method="POST"
@@ -64,7 +64,7 @@
 				projectId={task.projectId}
 			/>
 			{#if error}
-				<p class="text-sm text-destructive">{error}</p>
+				<p class="text-base text-destructive sm:text-sm">{error}</p>
 			{/if}
 			<div class="flex items-center gap-2">
 				<Button type="submit" size="sm">Save</Button>
@@ -90,21 +90,30 @@
 				<button
 					type="submit"
 					aria-label={done ? 'Reopen' : 'Complete'}
-					class="size-4 rounded-full border border-foreground/40 transition-colors hover:border-foreground {done
+					class="relative block size-5 rounded-full border border-foreground/40 transition-colors hover:border-foreground sm:size-4 {done
 						? 'bg-foreground/60'
 						: ''}"
-				></button>
+				>
+					<span
+						class="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+						aria-hidden="true"
+					></span>
+				</button>
 			</form>
 			<button type="button" class="min-w-0 flex-1 text-left" onclick={() => (editing = true)}>
-				<div class="text-sm {done ? 'text-muted-foreground line-through' : ''}">{task.title}</div>
+				<div class="text-base sm:text-sm {done ? 'text-muted-foreground line-through' : ''}">
+					{task.title}
+				</div>
 				{#if task.notes}
-					<div class="mt-0.5 line-clamp-2 text-xs whitespace-pre-line text-muted-foreground">
+					<div
+						class="mt-0.5 line-clamp-2 text-sm whitespace-pre-line text-muted-foreground sm:text-xs"
+					>
 						{task.notes}
 					</div>
 				{/if}
 				{#if task.priority !== 'none' || due || task.labels.length || (showProject && projectName)}
 					<div
-						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
+						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground sm:text-xs"
 					>
 						{#if task.priority !== 'none'}
 							<span class="capitalize {priorityClass[task.priority]}">{task.priority}</span>
