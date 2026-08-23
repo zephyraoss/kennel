@@ -18,17 +18,30 @@
 	const feedbackClass = page.status >= 400 ? 'text-destructive' : 'text-muted-foreground';
 
 	let busy = $state(false);
+	let pushError = $state<string | null>(null);
 
 	$effect(() => {
 		notifications.refresh();
 	});
 
+	const describePushError = (cause: unknown) => {
+		const message = cause instanceof Error ? cause.message : String(cause);
+		if (/push service/i.test(message))
+			return "This browser couldn't reach its push service. Chromium builds without Google API keys (like Fedora's) can't subscribe; try Firefox or Google Chrome.";
+		if (/applicationServerKey/i.test(message))
+			return 'An older subscription is in the way. Unregister the service worker in devtools and try again.';
+		return `Couldn't turn on reminders: ${message}`;
+	};
+
 	const toggleNotifications = async () => {
 		if (!data.vapidPublicKey) return;
 		busy = true;
+		pushError = null;
 		try {
 			if (notifications.enabled) await notifications.disable();
 			else await notifications.enable(data.vapidPublicKey);
+		} catch (cause) {
+			pushError = describePushError(cause);
 		} finally {
 			busy = false;
 		}
@@ -96,7 +109,9 @@
 					</form>
 				{/if}
 			</div>
-			{#if feedback('test')}
+			{#if pushError}
+				<p role="alert" class="text-destructive">{pushError}</p>
+			{:else if feedback('test')}
 				<p role="status" class={feedbackClass}>{feedback('test')}</p>
 			{/if}
 		{/if}
