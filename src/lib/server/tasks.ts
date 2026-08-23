@@ -69,6 +69,14 @@ export const backup = z.object({
 
 export type Backup = z.infer<typeof backup>;
 
+export const importProjectsInput = z.object({
+	projects: z.array(projectInput.extend({ id: z.string() })).max(1_000)
+});
+
+export const importTasksInput = z.object({ tasks: z.array(backupTask).max(500) });
+
+export type ImportTask = z.infer<typeof backupTask>;
+
 export type TaskInput = z.infer<typeof taskInput>;
 export type TaskPatch = z.infer<typeof taskPatch>;
 export type TaskListQuery = z.infer<typeof taskListQuery>;
@@ -308,34 +316,62 @@ export const createTaskService = (db: Database, userId: string) => {
 		};
 	};
 
-	const importAll = async (data: Backup) => {
-		const projectIds = new Map(data.projects.map((p) => [p.id, crypto.randomUUID()]));
-		const projectRows = data.projects.map((p) => ({
-			id: projectIds.get(p.id)!,
-			userId,
-			name: p.name
-		}));
-		const taskRows = data.tasks.map((t) => ({
-			id: crypto.randomUUID(),
-			userId,
-			title: t.title,
-			notes: t.notes ?? null,
-			labels: t.labels ?? [],
-			projectId: (t.projectId && projectIds.get(t.projectId)) ?? null,
-			priority: t.priority ?? 'none',
-			status: t.status ?? 'open',
-			dueAt: toDate(t.dueAt) ?? null,
-			repeat: t.repeat ?? null,
-			completedAt: toDate(t.completedAt) ?? null,
-			createdAt: toDate(t.createdAt) ?? new Date()
-		}));
-		const statements = [
-			...(projectRows.length ? [db.insert(project).values(projectRows)] : []),
-			...chunk(taskRows, 50).map((rows) => db.insert(task).values(rows))
-		];
+	const taskRowFrom = (t: ImportTask, projectId: string | null) => ({
+		id: crypto.randomUUID(),
+		userId,
+		title: t.title,
+		notes: t.notes ?? null,
+		labels: t.labels ?? [],
+		projectId,
+		priority: t.priority ?? 'none',
+		status: t.status ?? 'open',
+		dueAt: toDate(t.dueAt) ?? null,
+		repeat: t.repeat ?? null,
+		completedAt: t.status === 'done' ? (toDate(t.completedAt) ?? new Date()) : null,
+		createdAt: toDate(t.createdAt) ?? new Date()
+	});
+
+	const insertTasks = async (rows: ReturnType<typeof taskRowFrom>[]) => {
+		const statements = chunk(rows, 50).map((batch) => db.insert(task).values(batch));
 		if (statements.length)
 			await db.batch(statements as [(typeof statements)[0], ...typeof statements]);
-		return { projects: projectRows.length, tasks: taskRows.length };
+		return rows.length;
+	};
+
+	const importProjects = async (incoming: { id: string; name: string }[]) => {
+		const existing = new Map(
+			(await projects.list()).map((p) => [p.name.trim().toLowerCase(), p.id])
+		);
+		const mapping: Record<string, string> = {};
+		const rows: { id: string; userId: string; name: string }[] = [];
+		for (const p of incoming) {
+			const key = p.name.trim().toLowerCase();
+			let id = existing.get(key);
+			if (!id) {
+				id = crypto.randomUUID();
+				existing.set(key, id);
+				rows.push({ id, userId, name: p.name });
+			}
+			mapping[p.id] = id;
+		}
+		if (rows.length) await db.insert(project).values(rows);
+		return { mapping, created: rows.length };
+	};
+
+	const importTasks = async (incoming: ImportTask[]) => {
+		const owned = new Set((await projects.list()).map((p) => p.id));
+		const rows = incoming.map((t) =>
+			taskRowFrom(t, t.projectId && owned.has(t.projectId) ? t.projectId : null)
+		);
+		return insertTasks(rows);
+	};
+
+	const importAll = async (data: Backup) => {
+		const { mapping, created } = await importProjects(data.projects);
+		const rows = data.tasks.map((t) =>
+			taskRowFrom(t, (t.projectId && mapping[t.projectId]) ?? null)
+		);
+		return { projects: created, tasks: await insertTasks(rows) };
 	};
 
 	return {
@@ -351,7 +387,9 @@ export const createTaskService = (db: Database, userId: string) => {
 		remove,
 		projects,
 		exportAll,
-		importAll
+		importAll,
+		importProjects,
+		importTasks
 	};
 };
 

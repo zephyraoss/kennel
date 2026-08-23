@@ -1,11 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
-import { backup, createTaskService } from '$lib/server/tasks';
 import { createPushService } from '$lib/server/push';
 
 const DELETE_PHRASE = 'delete my account';
-const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
 const nameInput = z.string().trim().min(1, 'Name is required').max(100, 'Name is too long');
 
@@ -15,16 +13,6 @@ export const load: PageServerLoad = ({ locals, platform }) => ({
 	vapidPublicKey: platform?.env.VAPID_PUBLIC_KEY ?? null
 });
 
-const parseBackup = async (file: File) => {
-	if (file.size > MAX_IMPORT_BYTES) return { error: 'File is too large (5 MB max)' };
-	try {
-		const parsed = backup.safeParse(JSON.parse(await file.text()));
-		return parsed.success ? { data: parsed.data } : { error: 'Not a valid kennel export' };
-	} catch {
-		return { error: 'File is not valid JSON' };
-	}
-};
-
 export const actions: Actions = {
 	rename: async ({ locals, request }) => {
 		const form = await request.formData();
@@ -33,19 +21,6 @@ export const actions: Actions = {
 			return fail(400, { action: 'rename', message: parsed.error.issues[0].message });
 		await locals.auth.api.updateUser({ headers: request.headers, body: { name: parsed.data } });
 		return { action: 'rename', message: 'Name updated' };
-	},
-	import: async ({ locals, request }) => {
-		const form = await request.formData();
-		const file = form.get('file');
-		if (!(file instanceof File) || file.size === 0)
-			return fail(400, { action: 'import', message: 'Choose a file to import' });
-		const result = await parseBackup(file);
-		if (!result.data) return fail(400, { action: 'import', message: result.error });
-		const counts = await createTaskService(locals.database, locals.user!.id).importAll(result.data);
-		return {
-			action: 'import',
-			message: `Imported ${counts.tasks} tasks and ${counts.projects} projects`
-		};
 	},
 	testNotification: async ({ locals, platform }) => {
 		if (!platform?.env) return fail(500, { action: 'test', message: 'Push is not configured' });

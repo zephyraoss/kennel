@@ -7,12 +7,15 @@
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import TransferDialog from '$lib/components/transfer-dialog.svelte';
 	import { notifications } from '$lib/notifications.svelte';
 
 	let { data, form } = $props();
 
 	let name = $state(untrack(() => data.user.name));
 	let confirmDelete = $state('');
+	let importOpen = $state(false);
+	let exportOpen = $state(false);
 
 	const feedback = (action: string) => (form?.action === action ? form.message : null);
 	const feedbackClass = page.status >= 400 ? 'text-destructive' : 'text-muted-foreground';
@@ -91,8 +94,7 @@
 			</p>
 		{:else}
 			<p class="text-muted-foreground">
-				Get a push notification on this device the day before a task is due, and again when it's
-				due, even when kennel isn't open.
+				Get a push notification on this device for tasks that are due.
 			</p>
 			<div class="flex flex-wrap gap-2">
 				<Button
@@ -120,39 +122,19 @@
 	<section class="flex flex-col gap-3">
 		<h2 class="font-semibold">Your data</h2>
 		<p class="text-muted-foreground">
-			Export everything as JSON, or import a previous export. Imported tasks and projects are added
-			alongside what's already here.
+			Bring tasks from your previously-favorite task system or export to another system.
 		</p>
-		<div>
+		<div class="flex flex-wrap gap-2">
+			<Button variant="outline" onclick={() => (importOpen = true)}>Import tasks</Button>
+			<Button variant="outline" onclick={() => (exportOpen = true)}>Export tasks</Button>
 			<a
 				href={resolve('/app/settings/export')}
 				download
-				class={buttonVariants({ variant: 'outline' })}>Export JSON</a
+				class={buttonVariants({ variant: 'ghost' })}>Quick JSON backup</a
 			>
 		</div>
-		<form
-			method="POST"
-			action="?/import"
-			enctype="multipart/form-data"
-			use:enhance
-			class="flex flex-col gap-2"
-		>
-			<Label for="file">Import from file</Label>
-			<div class="flex gap-2">
-				<Input
-					id="file"
-					name="file"
-					type="file"
-					accept="application/json,.json"
-					required
-					class="flex-1"
-				/>
-				<Button type="submit" variant="outline" class="shrink-0">Import</Button>
-			</div>
-			{#if feedback('import')}
-				<p role="status" class={feedbackClass}>{feedback('import')}</p>
-			{/if}
-		</form>
+		<TransferDialog mode="import" bind:open={importOpen} />
+		<TransferDialog mode="export" bind:open={exportOpen} />
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border border-destructive/40 p-4">
