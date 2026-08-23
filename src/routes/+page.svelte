@@ -7,8 +7,8 @@
 </script>
 
 <Seo
-	title="kennel: a task list with a REST API and MCP server"
-	description="kennel is a simple task list you can use from a dashboard, connect to AI agents over a remote MCP server, or integrate into your own apps through a REST API with API keys or OAuth 2.1."
+	title="kennel: a simple, programmable task list"
+	description="A simple task list with a REST API and MCP server."
 	jsonLd={{
 		'@context': 'https://schema.org',
 		'@type': 'SoftwareApplication',
@@ -16,8 +16,7 @@
 		url: page.url.origin,
 		applicationCategory: 'ProductivityApplication',
 		operatingSystem: 'Web',
-		description:
-			'A simple task list with a dashboard, a REST API, and a remote MCP server for AI agents.',
+		description: 'A simple task list with a REST API and MCP server.',
 		offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 		featureList: [
 			'Task list dashboard',

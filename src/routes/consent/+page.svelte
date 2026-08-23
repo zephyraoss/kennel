@@ -30,8 +30,8 @@
 </script>
 
 <Seo
-	title="Authorize app | kennel"
-	description="Grant an app access to your kennel tasks."
+	title="kennel: Authorize app"
+	description="Let an app access your tasks."
 	noindex
 />
 

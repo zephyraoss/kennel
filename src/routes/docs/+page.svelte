@@ -7,15 +7,14 @@
 </script>
 
 <Seo
-	title="kennel docs: REST API, MCP server, API keys and OAuth"
-	image={{ title: 'Docs', subtitle: 'REST API, MCP server, API keys, and OAuth 2.1.' }}
-	description="How to use kennel: authenticate with API keys or OAuth 2.1 PKCE, call the REST API for tasks and projects, and connect any MCP client to the remote MCP server."
+	title="kennel: docs"
+	image={{ title: 'Docs', subtitle: 'How to integrate kennel within your app or agent.' }}
+	description="Easily connect your apps and agents to your task list."
 	jsonLd={{
 		'@context': 'https://schema.org',
 		'@type': 'TechArticle',
 		headline: 'kennel docs',
-		description:
-			'Reference for the kennel REST API, remote MCP server, API keys, and OAuth 2.1 authentication.',
+		description: 'Easily connect your apps and agents to your task list.',
 		url: `${page.url.origin}/docs`,
 		about: { '@type': 'SoftwareApplication', name: 'kennel', url: page.url.origin },
 		isPartOf: { '@type': 'WebSite', name: 'kennel', url: page.url.origin }

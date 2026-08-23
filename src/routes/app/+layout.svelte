@@ -20,6 +20,10 @@
 		{ href: resolve('/docs'), label: 'Docs' }
 	];
 
+	const pageLabel = $derived(
+		links.find((link) => link.href === page.url.pathname)?.label ?? 'Dashboard'
+	);
+
 	const linkClass = (href: string) =>
 		page.url.pathname === href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground';
 
@@ -33,7 +37,7 @@
 	});
 </script>
 
-<Seo title="Dashboard | kennel" description="Your kennel tasks and projects." noindex />
+<Seo title="kennel: {pageLabel}" description="Your tasks and projects." noindex />
 
 <div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-8">
 	<header class="mb-8">
