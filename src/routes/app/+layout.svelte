@@ -50,9 +50,11 @@
 					{/each}
 				</div>
 			</nav>
-			<div class="hidden items-center gap-3 text-sm lg:flex">
+			<div class="hidden items-center gap-4 text-sm lg:flex">
 				<span class="truncate text-muted-foreground">{data.user.name}</span>
-				<Button variant="ghost" size="sm" onclick={signOut}>Sign out</Button>
+				<button type="button" class="text-muted-foreground hover:text-foreground" onclick={signOut}>
+					Sign out
+				</button>
 			</div>
 			<Button
 				variant="ghost"
@@ -81,7 +83,13 @@
 				{/each}
 				<div class="mt-2 flex items-center justify-between gap-3 border-t pt-3">
 					<span class="truncate text-muted-foreground">{data.user.name}</span>
-					<Button variant="ghost" onclick={signOut}>Sign out</Button>
+					<button
+						type="button"
+						class="rounded-md px-2 py-2.5 text-muted-foreground hover:text-foreground"
+						onclick={signOut}
+					>
+						Sign out
+					</button>
 				</div>
 			</nav>
 		{/if}

@@ -22,7 +22,7 @@
 />
 
 <main class="mx-auto max-w-2xl px-6 py-8">
-	<header class="mb-8 flex items-center justify-between text-base sm:text-sm">
+	<header class="mb-8 flex min-h-8 items-center justify-between text-base sm:text-sm lg:min-h-0">
 		<a href={resolve('/')} class="font-semibold">kennel</a>
 		<a
 			href={data.user ? resolve('/app') : resolve('/login')}
