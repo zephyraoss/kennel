@@ -33,6 +33,22 @@ export const taskListQuery = z.object({
 
 export const projectInput = z.object({ name: z.string().trim().min(1).max(100) });
 
+export const BACKUP_VERSION = 1;
+
+const backupTask = taskInput.extend({
+	status: z.enum(TASK_STATUSES).optional(),
+	completedAt: z.iso.datetime().nullable().optional(),
+	createdAt: z.iso.datetime().optional()
+});
+
+export const backup = z.object({
+	version: z.literal(BACKUP_VERSION),
+	projects: z.array(projectInput.extend({ id: z.string() })).max(1_000),
+	tasks: z.array(backupTask).max(20_000)
+});
+
+export type Backup = z.infer<typeof backup>;
+
 export type TaskInput = z.infer<typeof taskInput>;
 export type TaskPatch = z.infer<typeof taskPatch>;
 export type TaskListQuery = z.infer<typeof taskListQuery>;
@@ -62,6 +78,11 @@ export type SerializedProject = ReturnType<typeof serializeProject>;
 
 const toDate = (value: string | null | undefined) =>
 	value === undefined ? undefined : value === null ? null : new Date(value);
+
+const chunk = <T>(items: T[], size: number) =>
+	Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
+		items.slice(i * size, (i + 1) * size)
+	);
 
 export class ProjectNotFound extends Error {}
 
@@ -171,7 +192,45 @@ export const createTaskService = (db: Database, userId: string) => {
 		return rows.length > 0;
 	};
 
-	return { list, get, create, update, remove, projects };
+	const exportAll = async (): Promise<Backup> => {
+		const [projectRows, taskRows] = await Promise.all([projects.list(), list()]);
+		return {
+			version: BACKUP_VERSION,
+			projects: projectRows.map(serializeProject),
+			tasks: taskRows.map(serializeTask)
+		};
+	};
+
+	const importAll = async (data: Backup) => {
+		const projectIds = new Map(data.projects.map((p) => [p.id, crypto.randomUUID()]));
+		const projectRows = data.projects.map((p) => ({
+			id: projectIds.get(p.id)!,
+			userId,
+			name: p.name
+		}));
+		const taskRows = data.tasks.map((t) => ({
+			id: crypto.randomUUID(),
+			userId,
+			title: t.title,
+			notes: t.notes ?? null,
+			labels: t.labels ?? [],
+			projectId: (t.projectId && projectIds.get(t.projectId)) ?? null,
+			priority: t.priority ?? 'none',
+			status: t.status ?? 'open',
+			dueAt: toDate(t.dueAt) ?? null,
+			completedAt: toDate(t.completedAt) ?? null,
+			createdAt: toDate(t.createdAt) ?? new Date()
+		}));
+		const statements = [
+			...(projectRows.length ? [db.insert(project).values(projectRows)] : []),
+			...chunk(taskRows, 50).map((rows) => db.insert(task).values(rows))
+		];
+		if (statements.length)
+			await db.batch(statements as [(typeof statements)[0], ...typeof statements]);
+		return { projects: projectRows.length, tasks: taskRows.length };
+	};
+
+	return { list, get, create, update, remove, projects, exportAll, importAll };
 };
 
 export type TaskService = ReturnType<typeof createTaskService>;
