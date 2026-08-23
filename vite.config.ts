@@ -14,6 +14,7 @@ const buildId = () => {
 
 export default defineConfig({
 	define: { __BUILD_ID__: JSON.stringify(buildId()) },
+	build: { rollupOptions: { external: (id) => id.endsWith('.wasm') } },
 	plugins: [
 		tailwindcss(),
 		sveltekit({

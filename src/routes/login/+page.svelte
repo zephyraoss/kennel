@@ -1,8 +1,11 @@
 <script lang="ts">
 	import GithubSignIn from '$lib/components/github-sign-in.svelte';
+	import Seo from '$lib/components/seo.svelte';
 
 	let { data } = $props();
 </script>
+
+<Seo title="Sign in to kennel" description="Sign in to kennel with GitHub." noindex />
 
 <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6">
 	<div class="space-y-1">

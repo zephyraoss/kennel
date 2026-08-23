@@ -7,6 +7,7 @@
 	import { authClient } from '$lib/auth';
 	import { Button } from '$lib/components/ui/button';
 	import SiteFooter from '$lib/components/site-footer.svelte';
+	import Seo from '$lib/components/seo.svelte';
 
 	let { data, children } = $props();
 
@@ -31,6 +32,8 @@
 		menuOpen = false;
 	});
 </script>
+
+<Seo title="Dashboard | kennel" description="Your kennel tasks and projects." noindex />
 
 <div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-8">
 	<header class="mb-8">

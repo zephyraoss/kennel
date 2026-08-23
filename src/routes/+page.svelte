@@ -2,7 +2,33 @@
 	import { resolve } from '$app/paths';
 	import GithubSignIn from '$lib/components/github-sign-in.svelte';
 	import SiteFooter from '$lib/components/site-footer.svelte';
+	import Seo from '$lib/components/seo.svelte';
+	import { page } from '$app/state';
 </script>
+
+<Seo
+	title="kennel: a task list with a REST API and MCP server"
+	description="kennel is a simple task list you can use from a dashboard, connect to AI agents over a remote MCP server, or integrate into your own apps through a REST API with API keys or OAuth 2.1."
+	jsonLd={{
+		'@context': 'https://schema.org',
+		'@type': 'SoftwareApplication',
+		name: 'kennel',
+		url: page.url.origin,
+		applicationCategory: 'ProductivityApplication',
+		operatingSystem: 'Web',
+		description:
+			'A simple task list with a dashboard, a REST API, and a remote MCP server for AI agents.',
+		offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+		featureList: [
+			'Task list dashboard',
+			'REST API',
+			'Remote MCP server',
+			'OAuth 2.1 with PKCE',
+			'API keys'
+		],
+		license: 'https://www.gnu.org/licenses/agpl-3.0.html'
+	}}
+/>
 
 <main class="mx-auto flex min-h-dvh max-w-md flex-col px-6 py-8">
 	<div class="flex flex-1 flex-col justify-center gap-8">

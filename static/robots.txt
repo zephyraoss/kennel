@@ -1,3 +1,9 @@
-# allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /app
+Disallow: /api
+Disallow: /mcp
+Disallow: /login
+Disallow: /consent
+
+Sitemap: https://kennel.work/sitemap.xml

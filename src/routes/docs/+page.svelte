@@ -1,12 +1,26 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import Seo from '$lib/components/seo.svelte';
+	import { page } from '$app/state';
 
 	let { data } = $props();
 </script>
 
-<svelte:head>
-	<title>kennel docs</title>
-</svelte:head>
+<Seo
+	title="kennel docs: REST API, MCP server, API keys and OAuth"
+	image={{ title: 'Docs', subtitle: 'REST API, MCP server, API keys, and OAuth 2.1.' }}
+	description="How to use kennel: authenticate with API keys or OAuth 2.1 PKCE, call the REST API for tasks and projects, and connect any MCP client to the remote MCP server."
+	jsonLd={{
+		'@context': 'https://schema.org',
+		'@type': 'TechArticle',
+		headline: 'kennel docs',
+		description:
+			'Reference for the kennel REST API, remote MCP server, API keys, and OAuth 2.1 authentication.',
+		url: `${page.url.origin}/docs`,
+		about: { '@type': 'SoftwareApplication', name: 'kennel', url: page.url.origin },
+		isPartOf: { '@type': 'WebSite', name: 'kennel', url: page.url.origin }
+	}}
+/>
 
 <main class="mx-auto max-w-2xl px-6 py-8">
 	<header class="mb-8 flex items-center justify-between text-base sm:text-sm">
@@ -22,7 +36,7 @@
 	<article
 		class="prose max-w-none sm:prose-sm prose-headings:font-semibold prose-pre:bg-muted prose-pre:text-foreground"
 	>
-		<h1>Docs</h1>
+		<h1>kennel docs</h1>
 		<p>
 			kennel is a simple task list. You can use it from a REST API, a remote MCP server, or the
 			dashboard. Every request needs either an API key or an OAuth access token.
