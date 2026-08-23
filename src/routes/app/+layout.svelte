@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { authClient } from '$lib/auth';
 	import { Button } from '$lib/components/ui/button';
+	import SiteFooter from '$lib/components/site-footer.svelte';
 
 	let { data, children } = $props();
 
@@ -41,4 +42,5 @@
 		</div>
 	</header>
 	{@render children()}
+	<SiteFooter />
 </div>

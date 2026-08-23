@@ -4,6 +4,8 @@ import type { Database } from '$lib/server/db';
 type SessionData = NonNullable<Awaited<ReturnType<Auth['api']['getSession']>>>;
 
 declare global {
+	const __BUILD_ID__: string;
+
 	namespace App {
 		interface Platform {
 			env: Env;
