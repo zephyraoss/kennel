@@ -36,6 +36,7 @@ export const trello: Format = {
 	extensions: ['.json'],
 	mark: 'Tr',
 	hue: 205,
+	container: 'json',
 	logo,
 	importer: {
 		instructions: [

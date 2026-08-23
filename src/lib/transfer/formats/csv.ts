@@ -1,4 +1,6 @@
 import { csvTable, detectDelimiter, findHeader, parseCsv, toCsv } from '../csv';
+import sheets from '$lib/assets/logos/google-sheets.svg';
+import libreoffice from '$lib/assets/logos/libreoffice.svg';
 import type { ColumnMapping, Format, ParseOptions, TransferData } from '../types';
 import {
 	clampNotes,
@@ -139,11 +141,16 @@ export const serializeCsv = (data: TransferData, stamp: string) => {
 
 export const csv: Format = {
 	id: 'csv',
-	name: 'CSV spreadsheet',
-	tagline: 'Any spreadsheet, one task per row',
+	name: 'Any spreadsheet',
+	tagline: 'Pick which columns mean what',
 	extensions: ['.csv', '.tsv', '.txt'],
 	mark: 'CSV',
 	hue: 150,
+	container: 'csv',
+	apps: [
+		{ name: 'Google Sheets', logo: sheets },
+		{ name: 'LibreOffice', logo: libreoffice }
+	],
 	importer: {
 		instructions: [
 			'Export a CSV from any app or spreadsheet with a header row.',

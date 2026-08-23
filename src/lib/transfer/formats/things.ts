@@ -36,6 +36,7 @@ export const things: Format = {
 	extensions: ['.json'],
 	mark: 'Th',
 	hue: 210,
+	container: 'json',
 	logo,
 	importer: {
 		instructions: [

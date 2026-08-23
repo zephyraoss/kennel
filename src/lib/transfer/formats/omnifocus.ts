@@ -16,6 +16,7 @@ export const omnifocus: Format = {
 	extensions: ['.csv'],
 	mark: 'OF',
 	hue: 265,
+	container: 'csv',
 	logo,
 	importer: {
 		instructions: [

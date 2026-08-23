@@ -44,6 +44,7 @@ export const taskwarrior: Format = {
 	extensions: ['.json'],
 	mark: 'TW',
 	hue: 30,
+	container: 'json',
 	logo,
 	importer: {
 		instructions: [

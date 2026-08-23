@@ -1,5 +1,7 @@
 import type { Format, TransferData } from '../types';
-import logo from '$lib/assets/logos/nextcloud.svg';
+import nextcloud from '$lib/assets/logos/nextcloud.svg';
+import thunderbird from '$lib/assets/logos/thunderbird.svg';
+import apple from '$lib/assets/logos/apple.svg';
 import {
 	clampNotes,
 	clampTitle,
@@ -71,7 +73,11 @@ export const ics: Format = {
 	extensions: ['.ics', '.ical', '.ifb'],
 	mark: 'iCal',
 	hue: 175,
-	logo,
+	apps: [
+		{ name: 'Nextcloud Tasks', logo: nextcloud },
+		{ name: 'Thunderbird', logo: thunderbird },
+		{ name: 'Apple Reminders', logo: apple }
+	],
 	importer: {
 		instructions: [
 			'Export a task list or calendar as .ics from Nextcloud Tasks, Thunderbird, Remember The Milk, Tasks.org or any CalDAV server.',

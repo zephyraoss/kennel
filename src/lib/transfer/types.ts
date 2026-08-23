@@ -53,6 +53,18 @@ export type Exporter = {
 	instructions: string[];
 };
 
+export type ContainerId = 'csv' | 'json';
+
+export type Card = {
+	id: string;
+	name: string;
+	tagline: string;
+	mark: string;
+	hue: number;
+	logo?: string;
+	apps?: { name: string; logo: string }[];
+};
+
 export type Format = {
 	id: string;
 	name: string;
@@ -61,6 +73,8 @@ export type Format = {
 	mark: string;
 	hue: number;
 	logo?: string;
+	apps?: { name: string; logo: string }[];
+	container?: ContainerId;
 	importer?: Importer;
 	exporter?: Exporter;
 };

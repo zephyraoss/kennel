@@ -38,6 +38,7 @@ export const todoist: Format = {
 	extensions: ['.csv'],
 	mark: 'Td',
 	hue: 0,
+	container: 'csv',
 	logo,
 	importer: {
 		instructions: [

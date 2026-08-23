@@ -58,6 +58,7 @@ export const ticktick: Format = {
 	extensions: ['.csv'],
 	mark: 'TT',
 	hue: 200,
+	container: 'csv',
 	logo,
 	importer: {
 		instructions: [

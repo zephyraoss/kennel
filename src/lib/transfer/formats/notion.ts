@@ -9,6 +9,7 @@ export const notion: Format = {
 	extensions: ['.csv'],
 	mark: 'N',
 	hue: 0,
+	container: 'csv',
 	logo,
 	importer: {
 		instructions: [

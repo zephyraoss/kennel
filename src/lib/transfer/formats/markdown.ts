@@ -1,5 +1,7 @@
 import type { Format, TransferData, TransferTask } from '../types';
-import logo from '$lib/assets/logos/obsidian.svg';
+import logo from '$lib/assets/logos/markdown.svg';
+import obsidian from '$lib/assets/logos/obsidian.svg';
+import logseq from '$lib/assets/logos/logseq.svg';
 import {
 	clampNotes,
 	clampTitle,
@@ -81,6 +83,10 @@ export const markdown: Format = {
 	mark: 'MD',
 	hue: 250,
 	logo,
+	apps: [
+		{ name: 'Obsidian', logo: obsidian },
+		{ name: 'Logseq', logo: logseq }
+	],
 	importer: {
 		instructions: [
 			'Choose a Markdown file with "- [ ]" checklists. Headings become projects and indented lines under a task become its notes.',

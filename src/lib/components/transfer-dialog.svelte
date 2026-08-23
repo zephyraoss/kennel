@@ -14,9 +14,12 @@
 		FIELDS,
 		acceptFor,
 		detectFormat,
+		entriesFor,
 		exportFormats,
 		importFormats,
+		type Card,
 		type ColumnMapping,
+		type Entry,
 		type Field,
 		type Format,
 		type TransferData
@@ -46,6 +49,7 @@
 
 	let step = $state<Step>('format');
 	let format = $state<Format | null>(null);
+	let container = $state<Extract<Entry, { kind: 'container' }> | null>(null);
 	let file = $state<{ name: string; text: string } | null>(null);
 	let suggestion = $state<Format | null>(null);
 	let columns = $state<string[]>([]);
@@ -64,6 +68,7 @@
 	let controller: AbortController | null = null;
 
 	const formats = $derived(mode === 'import' ? importFormats() : exportFormats());
+	const entries = $derived(entriesFor(formats));
 
 	const steps = $derived<{ id: Step; label: string }[]>(
 		mode === 'import'
@@ -103,6 +108,7 @@
 		controller = null;
 		step = 'format';
 		format = null;
+		container = null;
 		file = null;
 		suggestion = null;
 		columns = [];
@@ -120,7 +126,7 @@
 		if (!open) reset();
 	});
 
-	const markStyle = (f: Format) =>
+	const markStyle = (f: Card) =>
 		`background: oklch(0.93 0.05 ${f.hue}); color: oklch(0.4 0.12 ${f.hue});`;
 
 	const choose = (f: Format) => {
@@ -301,6 +307,55 @@
 	};
 </script>
 
+{#snippet card(entry: Card, select: () => void)}
+	<button
+		type="button"
+		onclick={select}
+		class="group/card relative flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none {entry
+			.apps?.length
+			? 'pb-8'
+			: ''}"
+	>
+		<span
+			class="flex size-8 items-center justify-center rounded-md text-xs font-semibold"
+			style={markStyle(entry)}
+			aria-hidden="true"
+		>
+			{#if entry.logo}
+				<img src={entry.logo} alt="" class="size-5" />
+			{:else}
+				{entry.mark}
+			{/if}
+		</span>
+		<span class="flex flex-col">
+			<span class="font-medium">{entry.name}</span>
+			<span class="text-xs text-muted-foreground">{entry.tagline}</span>
+		</span>
+		{#if entry.apps?.length}
+			<span
+				class="absolute right-2 bottom-2 flex flex-row-reverse -space-x-2 space-x-reverse transition-all group-hover/card:space-x-1"
+				aria-label="Used by {entry.apps.map((a) => a.name).join(', ')}"
+			>
+				{#each [...entry.apps].reverse() as app (app.name)}
+					<span class="group/avatar relative">
+						<img
+							src={app.logo}
+							alt={app.name}
+							class="size-5 rounded-full bg-white p-0.5 ring-2 ring-background"
+						/>
+						<span
+							role="tooltip"
+							class="pointer-events-none absolute right-0 bottom-full mb-1.5 hidden rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-background group-hover/avatar:block"
+						>
+							{app.name}
+						</span>
+					</span>
+				{/each}
+			</span>
+		{/if}
+	</button>
+{/snippet}
+
 <Dialog.Root bind:open>
 	<Dialog.Content class="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0 sm:max-w-xl">
 		<Dialog.Header class="border-b px-5 py-4">
@@ -343,34 +398,31 @@
 
 		<div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
 			{#if step === 'format'}
-				<p class="mb-3 text-muted-foreground">
-					{mode === 'import' ? 'Where are your tasks coming from?' : 'Where are your tasks going?'}
-				</p>
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each formats as f (f.id)}
-						<button
-							type="button"
-							onclick={() => choose(f)}
-							class="flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-						>
-							<span
-								class="flex size-8 items-center justify-center rounded-md text-xs font-semibold"
-								style={markStyle(f)}
-								aria-hidden="true"
-							>
-								{#if f.logo}
-									<img src={f.logo} alt="" class="size-5" />
-								{:else}
-									{f.mark}
-								{/if}
-							</span>
-							<span class="flex flex-col">
-								<span class="font-medium">{f.name}</span>
-								<span class="text-xs text-muted-foreground">{f.tagline}</span>
-							</span>
-						</button>
-					{/each}
-				</div>
+				{#if container}
+					<p class="mb-3 text-muted-foreground">
+						Which app {mode === 'import' ? 'made' : 'should read'} this {container.card.name} file?
+					</p>
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						{#each container.members as f (f.id)}
+							{@render card(f, () => choose(f))}
+						{/each}
+					</div>
+				{:else}
+					<p class="mb-3 text-muted-foreground">
+						{mode === 'import'
+							? 'Where are your tasks coming from?'
+							: 'Where are your tasks going?'}
+					</p>
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						{#each entries as entry (entry.kind === 'format' ? entry.format.id : entry.id)}
+							{#if entry.kind === 'format'}
+								{@render card(entry.format, () => choose(entry.format))}
+							{:else}
+								{@render card(entry.card, () => (container = entry))}
+							{/if}
+						{/each}
+					</div>
+				{/if}
 			{:else if step === 'file' && format?.importer}
 				<div class="flex flex-col gap-4">
 					<div class="flex flex-col gap-1.5 text-muted-foreground">
@@ -640,7 +692,12 @@
 
 		<div class="flex items-center justify-between gap-2 border-t px-5 py-3">
 			<div>
-				{#if step === 'file' || step === 'mapping' || step === 'review'}
+				{#if step === 'format' && container}
+					<Button variant="ghost" onclick={() => (container = null)}>
+						<ArrowLeftIcon aria-hidden="true" />
+						Back
+					</Button>
+				{:else if step === 'file' || step === 'mapping' || step === 'review'}
 					<Button variant="ghost" onclick={back}>
 						<ArrowLeftIcon aria-hidden="true" />
 						Back

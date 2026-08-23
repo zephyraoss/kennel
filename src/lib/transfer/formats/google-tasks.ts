@@ -31,6 +31,7 @@ export const googleTasks: Format = {
 	extensions: ['.json'],
 	mark: 'G',
 	hue: 45,
+	container: 'json',
 	logo,
 	importer: {
 		instructions: [

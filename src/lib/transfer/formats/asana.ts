@@ -25,6 +25,7 @@ export const asana: Format = {
 	extensions: ['.csv'],
 	mark: 'As',
 	hue: 345,
+	container: 'csv',
 	logo,
 	importer: {
 		instructions: [
