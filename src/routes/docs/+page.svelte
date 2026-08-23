@@ -27,7 +27,7 @@
 		<a href={resolve('/')} class="font-semibold">kennel</a>
 		<a
 			href={data.user ? resolve('/app') : resolve('/login')}
-			class={buttonVariants({ variant: 'ghost', size: 'sm', class: 'text-muted-foreground' })}
+			class={buttonVariants({ variant: 'ghost', class: 'text-muted-foreground' })}
 		>
 			{data.user ? 'Dashboard' : 'Sign in'}
 		</a>

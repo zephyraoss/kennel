@@ -73,9 +73,7 @@
 					aria-current={isCurrent(settingsHref) ? 'page' : undefined}
 					aria-label="Account settings for {data.user.name}">{data.user.name}</a
 				>
-				<Button variant="ghost" size="sm" class="text-muted-foreground" onclick={signOut}>
-					Sign out
-				</Button>
+				<Button variant="ghost" class="text-muted-foreground" onclick={signOut}>Sign out</Button>
 			</div>
 			<Button
 				variant="ghost"
