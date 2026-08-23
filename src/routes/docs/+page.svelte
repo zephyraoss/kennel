@@ -94,6 +94,28 @@
 			<a href={resolve('/app/oauth')}>OAuth</a>.
 		</p>
 
+		<h3>Devices and terminals</h3>
+		<p>
+			Clients that can't open a browser redirect, like a TUI or a CLI, can use the device
+			authorization grant instead. The client asks for a code, shows the user a short code and a
+			link to <code>{data.urls.api.replace('/api/v1', '')}/device</code>, and polls the token
+			endpoint until the user approves it there. Register the client as <code>native</code> with
+			<code>token_endpoint_auth_method</code> set to <code>none</code>; ask for
+			<code>offline_access</code> if you want a refresh token.
+		</p>
+		<pre><code
+				>{`curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/device/code \
+  -d "client_id=..." -d "scope=tasks:read tasks:write offline_access"
+
+curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
+  -d "grant_type=urn:ietf:params:oauth:grant-type:device_code" \
+  -d "device_code=..." -d "client_id=..."`}</code
+			></pre>
+		<p>
+			The token endpoint answers <code>authorization_pending</code> until the user decides, then
+			returns the access token. Respect the <code>interval</code> from the first response when polling.
+		</p>
+
 		<h2>REST</h2>
 		<div class="-mx-6 overflow-x-auto px-6">
 			<table class="min-w-full">

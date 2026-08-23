@@ -15,5 +15,5 @@
 			continue.
 		</p>
 	</div>
-	<GithubSignIn />
+	<GithubSignIn callbackURL={data.callbackURL} />
 </main>

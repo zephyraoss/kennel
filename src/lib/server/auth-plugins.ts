@@ -1,6 +1,7 @@
 import { jwt } from 'better-auth/plugins';
 import { apiKey } from '@better-auth/api-key';
 import { mcp } from '@better-auth/mcp';
+import { oauthDeviceAuthorization } from '@better-auth/oauth-provider';
 
 export const API_KEY_PREFIX = 'kn_';
 export const TASK_SCOPES = ['tasks:read', 'tasks:write'] as const;
@@ -30,6 +31,7 @@ export const corePlugins = (baseURL: string) => {
 			scopes: OAUTH_SCOPES,
 			allowDynamicClientRegistration: true,
 			allowUnauthenticatedClientRegistration: true
-		})
+		}),
+		oauthDeviceAuthorization({ verificationUri: '/device' })
 	];
 };

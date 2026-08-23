@@ -15,6 +15,13 @@
       "when": 1787493385561,
       "tag": "0001_push_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787496160449,
+      "tag": "0002_device_code",
+      "breakpoints": true
     }
   ]
 }

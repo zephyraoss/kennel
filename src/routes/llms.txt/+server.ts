@@ -21,6 +21,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 Every API and MCP request needs an API key or an OAuth 2.1 access token, sent as \`Authorization: Bearer <token>\`.
 API keys start with \`kn_\`, are created in the dashboard, and have full read and write access.
 OAuth uses the authorization-code flow with PKCE and supports dynamic client registration. Scopes are \`tasks:read\` and \`tasks:write\`.
+Devices and terminals that cannot open a browser redirect can use the device authorization grant (RFC 8628): POST ${baseURL}/api/auth/device/code with client_id and scope, send the user to ${baseURL}/device with the user_code, and poll ${baseURL}/api/auth/oauth2/token with grant_type=urn:ietf:params:oauth:grant-type:device_code.
 
 ## REST API
 
