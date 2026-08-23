@@ -5,6 +5,8 @@
 	import { Input } from '$lib/components/ui/input';
 	import TaskFields from '$lib/components/task-fields.svelte';
 	import TaskRow from '$lib/components/task-row.svelte';
+	import { createOptimisticTasks } from '$lib/optimistic-tasks.svelte';
+	import { draftTask, taskValues } from '$lib/task-form';
 
 	let { data, form } = $props();
 
@@ -12,8 +14,10 @@
 	let addingProject = $state(false);
 	let title = $state('');
 
-	const open = $derived(data.tasks.filter((t) => t.status === 'open'));
-	const done = $derived(data.tasks.filter((t) => t.status === 'done'));
+	const optimistic = createOptimisticTasks();
+	const tasks = $derived(optimistic.view(data.tasks, data.activeProjectId));
+	const open = $derived(tasks.filter((t) => t.status === 'open'));
+	const done = $derived(tasks.filter((t) => t.status === 'done'));
 	const activeProject = $derived(data.projects.find((p) => p.id === data.activeProjectId) ?? null);
 
 	const tabClass = (active: boolean) =>
@@ -79,14 +83,17 @@
 <form
 	method="POST"
 	action="?/create"
-	use:enhance={() =>
-		async ({ result, update }) => {
-			if (result.type === 'success') {
-				title = '';
-				fieldsKey += 1;
-			}
+	use:enhance={({ formData }) => {
+		const submitted = title;
+		const settle = optimistic.create(draftTask(taskValues(formData)));
+		title = '';
+		fieldsKey += 1;
+		return async ({ result, update }) => {
+			if (result.type === 'failure') title = submitted;
 			await update({ reset: false });
-		}}
+			settle();
+		};
+	}}
 	class="mb-8 grid gap-1 rounded-lg border p-1.5"
 >
 	<div class="flex items-center gap-2">
@@ -124,6 +131,7 @@
 	{#each open as task (task.id)}
 		<TaskRow
 			{task}
+			{optimistic}
 			projects={data.projects}
 			showProject={!data.activeProjectId}
 			error={form?.action === 'update' && form.id === task.id ? form.message : null}
@@ -142,6 +150,7 @@
 		{#each done as task (task.id)}
 			<TaskRow
 				{task}
+				{optimistic}
 				projects={data.projects}
 				showProject={!data.activeProjectId}
 				error={form?.action === 'update' && form.id === task.id ? form.message : null}

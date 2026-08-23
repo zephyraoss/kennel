@@ -3,16 +3,20 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import TaskFields from '$lib/components/task-fields.svelte';
+	import { settleAfter, type OptimisticTasks } from '$lib/optimistic-tasks.svelte';
 	import type { SerializedProject, SerializedTask } from '$lib/server/tasks';
+	import { taskValues, type TaskValues } from '$lib/task-form';
 
 	let {
 		task,
+		optimistic,
 		projects,
 		showProject,
 		error = null,
 		labelSuggestions = []
 	}: {
 		task: SerializedTask;
+		optimistic: OptimisticTasks;
 		projects: SerializedProject[];
 		showProject: boolean;
 		error?: string | null;
@@ -20,6 +24,9 @@
 	} = $props();
 
 	let editing = $state(false);
+	let draft = $state<TaskValues | null>(null);
+
+	const initial = $derived(draft ?? task);
 
 	const done = $derived(task.status === 'done');
 	const projectName = $derived(projects.find((p) => p.id === task.projectId)?.name ?? null);
@@ -50,6 +57,34 @@
 				: `Every ${task.repeat.interval} ${task.repeat.every}s`
 			: null
 	);
+
+	const toggle = () =>
+		settleAfter(
+			optimistic.patch(task.id, {
+				status: done ? 'open' : 'done',
+				completedAt: done ? null : new Date().toISOString()
+			})
+		);
+
+	const save = ({ action, formData }: { action: URL; formData: FormData }) => {
+		editing = false;
+		if (action.search === '?/delete') return settleAfter(optimistic.remove(task.id));
+		const values = taskValues(formData);
+		const settle = optimistic.patch(task.id, values);
+		return async ({
+			result,
+			update
+		}: {
+			result: { type: string };
+			update: () => Promise<void>;
+		}) => {
+			const failed = result.type === 'failure';
+			draft = failed ? values : null;
+			editing = failed;
+			await update();
+			settle();
+		};
+	};
 </script>
 
 <li class="py-2.5 sm:py-2">
@@ -57,23 +92,19 @@
 		<form
 			method="POST"
 			action="?/update"
-			use:enhance={() =>
-				async ({ result, update }) => {
-					if (result.type === 'success') editing = false;
-					await update();
-				}}
+			use:enhance={save}
 			class="grid gap-3 rounded-md border p-3"
 		>
 			<input type="hidden" name="id" value={task.id} />
-			<Input name="title" aria-label="Title" value={task.title} required />
+			<Input name="title" aria-label="Title" value={initial.title} required />
 			<TaskFields
 				{projects}
-				notes={task.notes}
-				priority={task.priority}
-				dueAt={task.dueAt}
-				labels={task.labels}
-				projectId={task.projectId}
-				repeat={task.repeat}
+				notes={initial.notes}
+				priority={initial.priority}
+				dueAt={initial.dueAt}
+				labels={initial.labels}
+				projectId={initial.projectId}
+				repeat={initial.repeat}
 				showProject
 				{labelSuggestions}
 			/>
@@ -82,8 +113,14 @@
 			{/if}
 			<div class="flex items-center gap-2">
 				<Button type="submit" size="sm">Save</Button>
-				<Button type="button" size="sm" variant="ghost" onclick={() => (editing = false)}
-					>Cancel</Button
+				<Button
+					type="button"
+					size="sm"
+					variant="ghost"
+					onclick={() => {
+						editing = false;
+						draft = null;
+					}}>Cancel</Button
 				>
 				<Button
 					type="submit"
@@ -98,7 +135,7 @@
 		</form>
 	{:else}
 		<div class="flex items-start gap-3">
-			<form method="POST" action="?/toggle" use:enhance class="pt-0.5">
+			<form method="POST" action="?/toggle" use:enhance={toggle} class="pt-0.5">
 				<input type="hidden" name="id" value={task.id} />
 				<input type="hidden" name="status" value={task.status} />
 				<button

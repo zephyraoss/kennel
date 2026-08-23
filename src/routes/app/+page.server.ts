@@ -9,6 +9,7 @@ import {
 	taskInput,
 	taskPatch
 } from '$lib/server/tasks';
+import { field, taskValues } from '$lib/task-form';
 
 const service = (locals: App.Locals) => createTaskService(locals.database, locals.user!.id);
 
@@ -28,39 +29,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	};
 };
 
-const field = (form: FormData, name: string) => {
-	const value = form.get(name);
-	return typeof value === 'string' ? value.trim() : '';
-};
-
-const optional = (value: string) => (value === '' ? null : value);
-
-const parseLabels = (raw: string) => [
-	...new Set(
-		raw
-			.split(',')
-			.map((l) => l.trim())
-			.filter(Boolean)
-	)
-];
-
-const taskFields = (form: FormData) => ({
-	title: field(form, 'title'),
-	notes: optional(field(form, 'notes')),
-	priority: field(form, 'priority') || 'none',
-	dueAt: optional(field(form, 'dueAt')) && new Date(field(form, 'dueAt')).toISOString(),
-	repeat: optional(field(form, 'repeat')) && { every: field(form, 'repeat'), interval: 1 },
-	labels: parseLabels(field(form, 'labels')),
-	projectId: optional(field(form, 'projectId'))
-});
-
 const firstIssue = (error: { issues: { message: string }[] }) =>
 	error.issues[0]?.message ?? 'Invalid input';
 
 export const actions: Actions = {
 	create: async ({ locals, request }) => {
 		const form = await request.formData();
-		const parsed = taskInput.safeParse(taskFields(form));
+		const parsed = taskInput.safeParse(taskValues(form));
 		if (!parsed.success) return fail(400, { action: 'create', message: firstIssue(parsed.error) });
 		try {
 			await service(locals).create(parsed.data);
@@ -73,7 +48,7 @@ export const actions: Actions = {
 	update: async ({ locals, request }) => {
 		const form = await request.formData();
 		const id = field(form, 'id');
-		const parsed = taskPatch.safeParse(taskFields(form));
+		const parsed = taskPatch.safeParse(taskValues(form));
 		if (!parsed.success)
 			return fail(400, { action: 'update', id, message: firstIssue(parsed.error) });
 		try {
