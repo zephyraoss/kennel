@@ -4,7 +4,7 @@
 </script>
 
 <footer
-	class="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-8 text-sm text-muted-foreground"
+	class="mt-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 pt-8 text-sm text-muted-foreground"
 >
 	<span class="flex items-center gap-1">
 		made with
