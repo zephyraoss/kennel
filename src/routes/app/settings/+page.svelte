@@ -27,7 +27,7 @@
 	const describePushError = (cause: unknown) => {
 		const message = cause instanceof Error ? cause.message : String(cause);
 		if (/push service/i.test(message))
-			return "This browser couldn't reach its push service. Chromium builds without Google API keys (like Fedora's) can't subscribe; try Firefox or Google Chrome.";
+			return "This browser couldn't reach its push service. De-Googled Chromium builds like Helium or ungoogled-chromium can't subscribe; try Firefox or Google Chrome.";
 		if (/applicationServerKey/i.test(message))
 			return 'An older subscription is in the way. Unregister the service worker in devtools and try again.';
 		return `Couldn't turn on reminders: ${message}`;
