@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
+	import { createClient, deleteClient, revokeApp } from './oauth.remote';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	const dateLabel = (iso: string) => new Date(iso).toLocaleDateString();
 	const scopeLabel: Record<string, string> = { 'tasks:read': 'read', 'tasks:write': 'write' };
@@ -23,6 +23,7 @@
 
 	<ul class="divide-y">
 		{#each data.apps as app (app.id)}
+			{@const revokeForm = revokeApp.for(app.id)}
 			<li class="flex items-start gap-3 py-2.5 text-base sm:py-2 sm:text-sm">
 				<div class="min-w-0 flex-1">
 					<div class="flex items-center gap-2">
@@ -44,10 +45,11 @@
 						{/if}
 					</div>
 				</div>
-				<form method="POST" action="?/revoke" use:enhance class="shrink-0">
+				<form {...revokeForm} class="shrink-0">
 					<input type="hidden" name="id" value={app.id} />
 					<button
 						type="submit"
+						disabled={!!revokeForm.pending}
 						class="relative text-sm text-muted-foreground hover:text-destructive sm:text-xs"
 					>
 						<span
@@ -77,7 +79,7 @@
 		<dd class="min-w-0 break-all"><code>{data.issuer}/oauth2/token</code></dd>
 	</dl>
 
-	<form method="POST" action="?/create" use:enhance class="mb-6 space-y-2">
+	<form {...createClient} class="mb-6 space-y-2">
 		<Input name="name" placeholder="Client name" aria-label="Client name" required />
 		<Textarea
 			name="redirect_uris"
@@ -89,21 +91,23 @@
 		<Button type="submit">Create client</Button>
 	</form>
 
-	{#if form?.message}
-		<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
-	{/if}
+	{#each createClient.fields.allIssues() ?? [] as issue (issue)}
+		<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{issue.message}</p>
+	{/each}
 
-	{#if form?.created}
+	{#if createClient.result}
 		<div role="status" class="mb-6 space-y-1 rounded-md border p-3 text-base sm:text-sm">
-			<p>Client <strong>{form.created.name}</strong> created. The secret is only shown once.</p>
+			<p>
+				Client <strong>{createClient.result.created.name}</strong> created. The secret is only shown once.
+			</p>
 			<p>
 				<span class="text-muted-foreground">client_id</span>
-				<code class="break-all select-all">{form.created.clientId}</code>
+				<code class="break-all select-all">{createClient.result.created.clientId}</code>
 			</p>
-			{#if form.created.clientSecret}
+			{#if createClient.result.created.clientSecret}
 				<p>
 					<span class="text-muted-foreground">client_secret</span>
-					<code class="break-all select-all">{form.created.clientSecret}</code>
+					<code class="break-all select-all">{createClient.result.created.clientSecret}</code>
 				</p>
 			{/if}
 		</div>
@@ -115,6 +119,7 @@
 
 	<ul class="divide-y">
 		{#each data.clients as client (client.clientId)}
+			{@const removeForm = deleteClient.for(client.clientId)}
 			<li class="flex items-start gap-3 py-2.5 text-base sm:py-2 sm:text-sm">
 				<div class="min-w-0 flex-1">
 					<div>{client.name}</div>
@@ -125,10 +130,11 @@
 						{client.redirectUris.join(', ')}
 					</div>
 				</div>
-				<form method="POST" action="?/delete" use:enhance class="shrink-0">
+				<form {...removeForm} class="shrink-0">
 					<input type="hidden" name="client_id" value={client.clientId} />
 					<button
 						type="submit"
+						disabled={!!removeForm.pending}
 						class="relative text-sm text-muted-foreground hover:text-destructive sm:text-xs"
 					>
 						<span

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import { createApiKey, deleteApiKey } from './keys.remote';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	const dateLabel = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString() : 'never');
 </script>
@@ -22,7 +22,7 @@
 	</dl>
 </section>
 
-<form method="POST" action="?/create" use:enhance class="mb-6 flex gap-2">
+<form {...createApiKey} class="mb-6 flex gap-2">
 	<Input
 		name="name"
 		placeholder="Key name (e.g. my-cli)"
@@ -33,16 +33,17 @@
 	<Button type="submit" class="shrink-0">Create key</Button>
 </form>
 
-{#if form?.message}
-	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
-{/if}
+{#each createApiKey.fields.allIssues() ?? [] as issue (issue)}
+	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{issue.message}</p>
+{/each}
 
-{#if form?.createdKey}
+{#if createApiKey.result}
 	<div role="status" class="mb-6 rounded-md border p-3 text-base sm:text-sm">
 		<p class="mb-1">
-			New key <strong>{form.createdName}</strong>. Copy it now. It won't be shown again.
+			New key <strong>{createApiKey.result.createdName}</strong>. Copy it now. It won't be shown
+			again.
 		</p>
-		<code class="block break-all select-all">{form.createdKey}</code>
+		<code class="block break-all select-all">{createApiKey.result.createdKey}</code>
 	</div>
 {/if}
 
@@ -52,6 +53,7 @@
 
 <ul class="divide-y">
 	{#each data.keys as key (key.id)}
+		{@const revokeForm = deleteApiKey.for(key.id)}
 		<li class="flex items-start gap-3 py-2.5 text-base sm:items-center sm:py-2 sm:text-sm">
 			<div class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
 				<span class="truncate">{key.name}</span>
@@ -60,10 +62,11 @@
 					>last used {dateLabel(key.lastRequest)}</span
 				>
 			</div>
-			<form method="POST" action="?/delete" use:enhance class="shrink-0">
+			<form {...revokeForm} class="shrink-0">
 				<input type="hidden" name="id" value={key.id} />
 				<button
 					type="submit"
+					disabled={!!revokeForm.pending}
 					class="relative text-sm text-muted-foreground hover:text-destructive sm:text-xs"
 				>
 					<span

@@ -1,5 +1,4 @@
-import { fail } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import type { PageServerLoad } from './$types';
 import { resourceUrls } from '$lib/server/auth';
 
 export const load: PageServerLoad = async ({ locals, request }) => {
@@ -15,24 +14,4 @@ export const load: PageServerLoad = async ({ locals, request }) => {
 		})),
 		urls: resourceUrls(baseURL)
 	};
-};
-
-export const actions: Actions = {
-	create: async ({ locals, request }) => {
-		const form = await request.formData();
-		const name = String(form.get('name') ?? '').trim();
-		if (!name) return fail(400, { message: 'Name is required' });
-		const created = await locals.auth.api.createApiKey({
-			headers: request.headers,
-			body: { name }
-		});
-		return { createdKey: created.key, createdName: name };
-	},
-	delete: async ({ locals, request }) => {
-		const form = await request.formData();
-		await locals.auth.api.deleteApiKey({
-			headers: request.headers,
-			body: { keyId: String(form.get('id') ?? '') }
-		});
-	}
 };

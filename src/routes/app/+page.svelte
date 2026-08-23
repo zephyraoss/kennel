@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import TaskFields from '$lib/components/task-fields.svelte';
 	import TaskRow from '$lib/components/task-row.svelte';
 	import { createOptimisticTasks } from '$lib/optimistic-tasks.svelte';
+	import { createProject, createTask, deleteProject } from '$lib/tasks.remote';
 	import { draftTask, taskValues } from '$lib/task-form';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	let fieldsKey = $state(0);
 	let addingProject = $state(false);
@@ -39,13 +39,9 @@
 	{/each}
 	{#if addingProject}
 		<form
-			method="POST"
-			action="?/createProject"
-			use:enhance={() =>
-				async ({ result, update }) => {
-					if (result.type === 'redirect') addingProject = false;
-					await update();
-				}}
+			{...createProject.enhance(async (form) => {
+				if (await form.submit()) addingProject = false;
+			})}
 			class="flex items-center gap-1"
 		>
 			<Input
@@ -67,7 +63,7 @@
 		>
 	{/if}
 	{#if activeProject}
-		<form method="POST" action="?/deleteProject" use:enhance class="ml-auto">
+		<form {...deleteProject} class="ml-auto">
 			<input type="hidden" name="id" value={activeProject.id} />
 			<button type="submit" class="text-sm text-muted-foreground hover:text-destructive sm:text-xs"
 				>Delete project<span class="sr-only"> {activeProject.name}</span></button
@@ -76,24 +72,19 @@
 	{/if}
 </nav>
 
-{#if form?.action === 'createProject'}
-	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
-{/if}
+{#each createProject.fields.allIssues() ?? [] as issue (issue)}
+	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{issue.message}</p>
+{/each}
 
 <form
-	method="POST"
-	action="?/create"
-	use:enhance={({ formData }) => {
+	{...createTask.enhance(async (form) => {
 		const submitted = title;
-		const settle = optimistic.create(draftTask(taskValues(formData)));
+		const settle = optimistic.create(draftTask(taskValues(new FormData(form.element))));
 		title = '';
 		fieldsKey += 1;
-		return async ({ result, update }) => {
-			if (result.type === 'failure') title = submitted;
-			await update({ reset: false });
-			settle();
-		};
-	}}
+		if (!(await form.submit())) title = submitted;
+		settle();
+	})}
 	class="mb-8 grid gap-1 rounded-lg border p-1.5"
 >
 	<div class="flex items-center gap-2">
@@ -118,9 +109,9 @@
 	{#if data.activeProjectId}
 		<input type="hidden" name="projectId" value={data.activeProjectId} />
 	{/if}
-	{#if form?.action === 'create'}
-		<p role="alert" class="px-1.5 pb-1 text-base text-destructive sm:text-sm">{form.message}</p>
-	{/if}
+	{#each createTask.fields.allIssues() ?? [] as issue (issue)}
+		<p role="alert" class="px-1.5 pb-1 text-base text-destructive sm:text-sm">{issue.message}</p>
+	{/each}
 </form>
 
 {#if open.length === 0 && done.length === 0}
@@ -134,7 +125,6 @@
 			{optimistic}
 			projects={data.projects}
 			showProject={!data.activeProjectId}
-			error={form?.action === 'update' && form.id === task.id ? form.message : null}
 			labelSuggestions={data.labelSuggestions}
 		/>
 	{/each}
@@ -153,7 +143,6 @@
 				{optimistic}
 				projects={data.projects}
 				showProject={!data.activeProjectId}
-				error={form?.action === 'update' && form.id === task.id ? form.message : null}
 				labelSuggestions={data.labelSuggestions}
 			/>
 		{/each}

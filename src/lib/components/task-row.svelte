@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import TaskFields from '$lib/components/task-fields.svelte';
-	import { settleAfter, type OptimisticTasks } from '$lib/optimistic-tasks.svelte';
+	import { type OptimisticTasks } from '$lib/optimistic-tasks.svelte';
+	import { deleteTask, toggleTask, updateTask } from '$lib/tasks.remote';
 	import type { SerializedProject, SerializedTask } from '$lib/server/tasks';
 	import { taskValues, type TaskValues } from '$lib/task-form';
 
@@ -12,14 +12,12 @@
 		optimistic,
 		projects,
 		showProject,
-		error = null,
 		labelSuggestions = []
 	}: {
 		task: SerializedTask;
 		optimistic: OptimisticTasks;
 		projects: SerializedProject[];
 		showProject: boolean;
-		error?: string | null;
 		labelSuggestions?: string[];
 	} = $props();
 
@@ -58,43 +56,26 @@
 			: null
 	);
 
-	const toggle = () =>
-		settleAfter(
-			optimistic.patch(task.id, {
-				status: done ? 'open' : 'done',
-				completedAt: done ? null : new Date().toISOString()
-			})
-		);
+	const saveForm = $derived(updateTask.for(task.id));
+	const removeForm = $derived(deleteTask.for(task.id));
+	const removeFormId = $derived(`delete-task-${task.id}`);
 
-	const save = ({ action, formData }: { action: URL; formData: FormData }) => {
-		editing = false;
-		if (action.search === '?/delete') return settleAfter(optimistic.remove(task.id));
-		const values = taskValues(formData);
+	const save = async (form: { element: HTMLFormElement; submit(): Promise<boolean> }) => {
+		const values = taskValues(new FormData(form.element));
 		const settle = optimistic.patch(task.id, values);
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
-			const failed = result.type === 'failure';
-			draft = failed ? values : null;
-			editing = failed;
-			await update();
-			settle();
-		};
+		if (await form.submit()) {
+			editing = false;
+			draft = null;
+		} else {
+			draft = values;
+		}
+		settle();
 	};
 </script>
 
 <li class="py-2.5 sm:py-2">
 	{#if editing}
-		<form
-			method="POST"
-			action="?/update"
-			use:enhance={save}
-			class="grid gap-3 rounded-md border p-3"
-		>
+		<form {...saveForm.enhance(save)} class="grid gap-3 rounded-md border p-3">
 			<input type="hidden" name="id" value={task.id} />
 			<Input name="title" aria-label="Title" value={initial.title} required />
 			<TaskFields
@@ -108,9 +89,9 @@
 				showProject
 				{labelSuggestions}
 			/>
-			{#if error}
-				<p role="alert" class="text-base text-destructive sm:text-sm">{error}</p>
-			{/if}
+			{#each saveForm.fields.allIssues() ?? [] as issue (issue)}
+				<p role="alert" class="text-base text-destructive sm:text-sm">{issue.message}</p>
+			{/each}
 			<div class="flex items-center gap-2">
 				<Button type="submit" size="sm">Save</Button>
 				<Button
@@ -126,16 +107,27 @@
 					type="submit"
 					size="sm"
 					variant="ghost"
-					formaction="?/delete"
-					class="ml-auto text-destructive"
+					form={removeFormId}
+					class="ml-auto text-destructive">Delete</Button
 				>
-					Delete
-				</Button>
 			</div>
+		</form>
+		<form {...removeForm} id={removeFormId}>
+			<input type="hidden" name="id" value={task.id} />
 		</form>
 	{:else}
 		<div class="flex items-start gap-3">
-			<form method="POST" action="?/toggle" use:enhance={toggle} class="pt-0.5">
+			<form
+				{...toggleTask.enhance(async (form) => {
+					const settle = optimistic.patch(task.id, {
+						status: done ? 'open' : 'done',
+						completedAt: done ? null : new Date().toISOString()
+					});
+					await form.submit();
+					settle();
+				})}
+				class="pt-0.5"
+			>
 				<input type="hidden" name="id" value={task.id} />
 				<input type="hidden" name="status" value={task.status} />
 				<button

@@ -1,24 +1,19 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import TransferDialog from '$lib/components/transfer-dialog.svelte';
 	import { notifications } from '$lib/notifications.svelte';
+	import { deleteAccount, rename, sendTestNotification } from './settings.remote';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	let name = $state(untrack(() => data.user.name));
 	let confirmDelete = $state('');
 	let importOpen = $state(false);
 	let exportOpen = $state(false);
-
-	const feedback = (action: string) => (form?.action === action ? form.message : null);
-	const feedbackClass = page.status >= 400 ? 'text-destructive' : 'text-muted-foreground';
 
 	let busy = $state(false);
 	let pushError = $state<string | null>(null);
@@ -55,16 +50,7 @@
 	<section class="flex flex-col gap-3">
 		<h2 class="font-semibold">Profile</h2>
 		<p class="text-muted-foreground">Signed in with GitHub as {data.email}.</p>
-		<form
-			method="POST"
-			action="?/rename"
-			use:enhance={() =>
-				async ({ update }) => {
-					await update({ reset: false });
-					await invalidateAll();
-				}}
-			class="flex flex-col gap-2"
-		>
+		<form {...rename} class="flex flex-col gap-2">
 			<Label for="name">Display name</Label>
 			<div class="flex gap-2">
 				<Input id="name" name="name" bind:value={name} required maxlength={100} class="flex-1" />
@@ -72,8 +58,11 @@
 					>Save</Button
 				>
 			</div>
-			{#if feedback('rename')}
-				<p role="status" class={feedbackClass}>{feedback('rename')}</p>
+			{#each rename.fields.allIssues() ?? [] as issue (issue)}
+				<p role="alert" class="text-destructive">{issue.message}</p>
+			{/each}
+			{#if rename.result}
+				<p role="status" class="text-muted-foreground">{rename.result.message}</p>
 			{/if}
 		</form>
 	</section>
@@ -106,15 +95,20 @@
 					{notifications.enabled ? 'Turn off reminders' : 'Turn on reminders'}
 				</Button>
 				{#if notifications.enabled}
-					<form method="POST" action="?/testNotification" use:enhance>
+					<form {...sendTestNotification}>
 						<Button type="submit" variant="ghost">Send a test</Button>
 					</form>
 				{/if}
 			</div>
 			{#if pushError}
 				<p role="alert" class="text-destructive">{pushError}</p>
-			{:else if feedback('test')}
-				<p role="status" class={feedbackClass}>{feedback('test')}</p>
+			{:else}
+				{#each sendTestNotification.fields.allIssues() ?? [] as issue (issue)}
+					<p role="alert" class="text-destructive">{issue.message}</p>
+				{/each}
+				{#if sendTestNotification.result}
+					<p role="status" class="text-muted-foreground">{sendTestNotification.result.message}</p>
+				{/if}
 			{/if}
 		{/if}
 	</section>
@@ -143,7 +137,7 @@
 			Permanently removes your account, tasks, projects, API keys, and connected apps. This can't be
 			undone, so export first if you might want your data later.
 		</p>
-		<form method="POST" action="?/deleteAccount" use:enhance class="flex flex-col gap-2">
+		<form {...deleteAccount} class="flex flex-col gap-2">
 			<Label for="confirm">Type <strong>{data.deletePhrase}</strong> to confirm</Label>
 			<div class="flex gap-2">
 				<Input
@@ -162,9 +156,9 @@
 					Delete account
 				</Button>
 			</div>
-			{#if feedback('deleteAccount')}
-				<p role="alert" class="text-destructive">{feedback('deleteAccount')}</p>
-			{/if}
+			{#each deleteAccount.fields.allIssues() ?? [] as issue (issue)}
+				<p role="alert" class="text-destructive">{issue.message}</p>
+			{/each}
 		</form>
 	</section>
 </div>

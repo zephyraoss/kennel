@@ -13,13 +13,6 @@ const applied = (tasks: SerializedTask[], mutation: Mutation) => {
 	return tasks.map((t) => (t.id === mutation.id ? { ...t, ...mutation.values } : t));
 };
 
-export const settleAfter =
-	(settle: Settle) =>
-	async ({ update }: { update: () => Promise<void> }) => {
-		await update();
-		settle();
-	};
-
 export const createOptimisticTasks = () => {
 	let pending = $state.raw<{ token: symbol; mutation: Mutation }[]>([]);
 
