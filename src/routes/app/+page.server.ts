@@ -15,10 +15,15 @@ const service = (locals: App.Locals) => createTaskService(locals.database, local
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const tasks = service(locals);
 	const projectId = url.searchParams.get('project') ?? undefined;
-	const [rows, projects] = await Promise.all([tasks.list({ projectId }), tasks.projects.list()]);
+	const [rows, projects, labels] = await Promise.all([
+		tasks.list({ projectId }),
+		tasks.projects.list(),
+		tasks.labels()
+	]);
 	return {
 		tasks: rows.map(serializeTask),
 		projects: projects.map(serializeProject),
+		labelSuggestions: labels.map((l) => l.name),
 		activeProjectId: projectId ?? null
 	};
 };

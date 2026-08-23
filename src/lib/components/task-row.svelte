@@ -9,12 +9,14 @@
 		task,
 		projects,
 		showProject,
-		error = null
+		error = null,
+		labelSuggestions = []
 	}: {
 		task: SerializedTask;
 		projects: SerializedProject[];
 		showProject: boolean;
 		error?: string | null;
+		labelSuggestions?: string[];
 	} = $props();
 
 	let editing = $state(false);
@@ -72,6 +74,8 @@
 				labels={task.labels}
 				projectId={task.projectId}
 				repeat={task.repeat}
+				showProject
+				{labelSuggestions}
 			/>
 			{#if error}
 				<p role="alert" class="text-base text-destructive sm:text-sm">{error}</p>

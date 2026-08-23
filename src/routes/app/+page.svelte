@@ -8,7 +8,7 @@
 
 	let { data, form } = $props();
 
-	let expanded = $state(false);
+	let fieldsKey = $state(0);
 	let addingProject = $state(false);
 	let title = $state('');
 
@@ -83,11 +83,11 @@
 		async ({ result, update }) => {
 			if (result.type === 'success') {
 				title = '';
-				expanded = false;
+				fieldsKey += 1;
 			}
 			await update({ reset: false });
 		}}
-	class="mb-8 rounded-md border {expanded ? 'p-3' : 'p-1'} transition-[padding]"
+	class="mb-8 grid gap-1 rounded-lg border p-1.5"
 >
 	<div class="flex items-center gap-2">
 		<Input
@@ -96,30 +96,23 @@
 			aria-label={activeProject ? `Add a task to ${activeProject.name}` : 'Add a task'}
 			required
 			bind:value={title}
-			class="flex-1 border-0 shadow-none focus-visible:ring-0"
+			class="min-w-0 flex-1 border-0 shadow-none focus-visible:ring-0"
 		/>
-		<Button
-			type="button"
-			variant="ghost"
-			size="sm"
-			class="text-muted-foreground"
-			onclick={() => (expanded = !expanded)}
-			aria-expanded={expanded}
-			aria-controls="task-details"
-		>
-			{expanded ? 'Less' : 'More'}<span class="sr-only"> task details</span>
-		</Button>
 		<Button type="submit" size="sm" disabled={!title.trim()}>Add</Button>
 	</div>
-	{#if expanded}
-		<div id="task-details" class="mt-3">
-			<TaskFields projects={data.projects} projectId={data.activeProjectId} />
-		</div>
-	{:else}
-		<input type="hidden" name="projectId" value={data.activeProjectId ?? ''} />
+	{#key fieldsKey}
+		<TaskFields
+			projects={data.projects}
+			projectId={data.activeProjectId}
+			showProject={!data.activeProjectId}
+			labelSuggestions={data.labelSuggestions}
+		/>
+	{/key}
+	{#if data.activeProjectId}
+		<input type="hidden" name="projectId" value={data.activeProjectId} />
 	{/if}
 	{#if form?.action === 'create'}
-		<p role="alert" class="mt-2 text-base text-destructive sm:text-sm">{form.message}</p>
+		<p role="alert" class="px-1.5 pb-1 text-base text-destructive sm:text-sm">{form.message}</p>
 	{/if}
 </form>
 
@@ -134,6 +127,7 @@
 			projects={data.projects}
 			showProject={!data.activeProjectId}
 			error={form?.action === 'update' && form.id === task.id ? form.message : null}
+			labelSuggestions={data.labelSuggestions}
 		/>
 	{/each}
 </ul>
@@ -151,6 +145,7 @@
 				projects={data.projects}
 				showProject={!data.activeProjectId}
 				error={form?.action === 'update' && form.id === task.id ? form.message : null}
+				labelSuggestions={data.labelSuggestions}
 			/>
 		{/each}
 	</ul>
