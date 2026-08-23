@@ -25,24 +25,28 @@ Devices and terminals that cannot open a browser redirect can use the device aut
 
 ## REST API
 
-- GET /tasks (query params: status=open|done, projectId, label)
+- GET /tasks (query params: status=open|done, projectId, label, q for search over title and notes, dueAfter and dueBefore as inclusive ISO 8601 datetimes)
 - POST /tasks
+- PATCH /tasks (body: ids[] up to 200 plus any of status, priority, projectId, labels, dueAt; applies to all)
+- PUT /tasks/order (body: ids[] in display order; sets each task's position to its index)
 - GET /tasks/:id
 - PATCH /tasks/:id
 - DELETE /tasks/:id
+- GET /labels (every label in use with a count)
 - GET /projects
 - POST /projects
 - GET /projects/:id
 - PATCH /projects/:id
 - DELETE /projects/:id
 
-Task fields: title (required), notes, labels (string[]), projectId, status (open|done), priority (none|low|medium|high), dueAt (ISO 8601), repeat ({ every: day|week|month, interval: n } or null).
+Task fields: title (required), notes, labels (string[]), projectId, status (open|done), priority (none|low|medium|high), dueAt (ISO 8601), repeat ({ every: day|week|month, interval: n } or null), position (integer sort key for open tasks, lower first; new tasks go to the top).
 Completing a task with repeat set creates the next instance with dueAt advanced; complete_task returns it as "next".
 Errors return a non-2xx status with \`{ "error": { "code": "...", "message": "..." } }\`.
 
 ## MCP tools
 
-list_tasks, get_task, create_task, update_task, complete_task, delete_task, list_projects, create_project, delete_project
+list_tasks, get_task, create_task, update_task, complete_task, delete_task, update_tasks, complete_tasks, reorder_tasks, list_labels, list_projects, create_project, delete_project
+Call list_labels before creating tasks so labels are reused rather than duplicated.
 
 Example MCP client config:
 

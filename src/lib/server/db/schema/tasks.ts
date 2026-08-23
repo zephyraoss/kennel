@@ -40,6 +40,7 @@ export const task = sqliteTable(
 		priority: text('priority', { enum: TASK_PRIORITIES }).notNull().default('none'),
 		dueAt: integer('due_at', { mode: 'timestamp_ms' }),
 		repeat: text('repeat', { mode: 'json' }).$type<Repeat>(),
+		position: integer('position').notNull().default(0),
 		completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).default(now).notNull(),
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })

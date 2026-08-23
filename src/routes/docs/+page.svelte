@@ -123,9 +123,12 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
 				<tbody>
 					<tr><td>GET</td><td><code>/tasks</code></td><td>tasks:read</td></tr>
 					<tr><td>POST</td><td><code>/tasks</code></td><td>tasks:write</td></tr>
+					<tr><td>PATCH</td><td><code>/tasks</code></td><td>tasks:write</td></tr>
+					<tr><td>PUT</td><td><code>/tasks/order</code></td><td>tasks:write</td></tr>
 					<tr><td>GET</td><td><code>/tasks/:id</code></td><td>tasks:read</td></tr>
 					<tr><td>PATCH</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
 					<tr><td>DELETE</td><td><code>/tasks/:id</code></td><td>tasks:write</td></tr>
+					<tr><td>GET</td><td><code>/labels</code></td><td>tasks:read</td></tr>
 					<tr><td>GET</td><td><code>/projects</code></td><td>tasks:read</td></tr>
 					<tr><td>POST</td><td><code>/projects</code></td><td>tasks:write</td></tr>
 					<tr><td>GET</td><td><code>/projects/:id</code></td><td>tasks:read</td></tr>
@@ -136,7 +139,26 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
 		</div>
 		<p>
 			<code>GET /tasks</code> accepts <code>status</code> (<code>open</code> or <code>done</code>),
-			<code>projectId</code>, and <code>label</code> query params.
+			<code>projectId</code>, <code>label</code>, <code>q</code> (case-insensitive search over title
+			and notes), and <code>dueAfter</code> / <code>dueBefore</code> (inclusive ISO 8601 datetimes) query
+			params. Open tasks come back in the user's manual order.
+		</p>
+		<p>
+			<code>PATCH /tasks</code> applies one change to many tasks: send <code>ids</code> (up to 200)
+			plus any of <code>status</code>, <code>priority</code>, <code>projectId</code>,
+			<code>labels</code>, or <code>dueAt</code>. Ids that don't exist are skipped. The response has
+			<code>tasks</code> and <code>next</code>, the latter holding new instances of any repeating
+			tasks you completed.
+		</p>
+		<p>
+			<code>PUT /tasks/order</code> takes <code>ids</code> in the order they should appear and sets
+			each task's <code>position</code> to its index. Send the complete list for a view; tasks you
+			leave out keep their position. A single <code>PATCH /tasks/:id</code> also accepts
+			<code>position</code>. New tasks land at the top.
+		</p>
+		<p>
+			<code>GET /labels</code> returns every label in use with a count, so clients can reuse labels instead
+			of inventing near-duplicates.
 		</p>
 		<p>A task looks like this:</p>
 		<pre><code
@@ -150,6 +172,7 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
   "priority": "medium",
   "dueAt": "2026-08-30T00:00:00.000Z",
   "repeat": { "every": "week", "interval": 1 },
+  "position": 0,
   "completedAt": null,
   "createdAt": "…",
   "updatedAt": "…"
@@ -174,6 +197,11 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
 						></tr
 					>
 					<tr><td><code>labels</code></td><td>string[]</td><td></td></tr>
+					<tr
+						><td><code>position</code></td><td>integer</td><td
+							>Sort key for open tasks, lower first</td
+						></tr
+					>
 					<tr
 						><td><code>projectId</code></td><td>string or null</td><td
 							>Must be an existing project</td
@@ -203,6 +231,10 @@ curl -X POST ${data.urls.api.replace('/api/v1', '')}/api/auth/oauth2/token \
 			<li>
 				<code>list_tasks</code>, <code>get_task</code>, <code>create_task</code>,
 				<code>update_task</code>, <code>complete_task</code>, <code>delete_task</code>
+			</li>
+			<li>
+				<code>update_tasks</code>, <code>complete_tasks</code>, <code>reorder_tasks</code>,
+				<code>list_labels</code>
 			</li>
 			<li><code>list_projects</code>, <code>create_project</code>, <code>delete_project</code></li>
 		</ul>

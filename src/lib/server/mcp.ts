@@ -3,12 +3,14 @@ import { z } from 'zod';
 import type { Principal } from './principal';
 import {
 	ProjectNotFound,
+	bulkTaskPatch,
 	createTaskService,
 	projectInput,
 	serializeProject,
 	serializeTask,
 	taskInput,
 	taskListQuery,
+	taskOrder,
 	taskPatch,
 	type TaskService
 } from './tasks';
@@ -52,10 +54,20 @@ const buildServer = (tasks: TaskService, principal: Principal) => {
 		'list_tasks',
 		{
 			description:
-				'List tasks. Filter by status (open or done), projectId, or a single label. Defaults to all tasks.',
+				"List tasks. Filter by status (open or done), projectId, a single label, q (case-insensitive search over title and notes), and dueAfter / dueBefore (ISO 8601 datetimes, inclusive). Defaults to all tasks. Open tasks come back in the user's chosen order.",
 			inputSchema: taskListQuery
 		},
 		reading(async (filter) => (await tasks.list(filter)).map(serializeTask))
+	);
+
+	server.registerTool(
+		'list_labels',
+		{
+			description:
+				'List every label the user has applied to a task, with how many tasks carry it. Check this before creating tasks so you reuse existing labels instead of inventing near-duplicates.',
+			inputSchema: z.object({})
+		},
+		reading(() => tasks.labels())
 	);
 
 	server.registerTool(
@@ -103,6 +115,42 @@ const buildServer = (tasks: TaskService, principal: Principal) => {
 				? { ...serializeTask(result.row), next: result.next ? serializeTask(result.next) : null }
 				: null;
 		})
+	);
+
+	server.registerTool(
+		'update_tasks',
+		{
+			description:
+				'Apply the same change to several tasks at once (up to 200 ids). Supports status, priority, projectId, labels, and dueAt. Ids that do not exist are skipped. Returns the updated tasks plus "next" for any repeating tasks that were completed.',
+			inputSchema: bulkTaskPatch
+		},
+		writing(async (input) => {
+			const result = await tasks.updateMany(input);
+			return { tasks: result.tasks.map(serializeTask), next: result.next.map(serializeTask) };
+		})
+	);
+
+	server.registerTool(
+		'complete_tasks',
+		{
+			description:
+				'Mark several tasks as done in one call (up to 200 ids). Repeating tasks spawn their next instance, returned as "next".',
+			inputSchema: taskOrder
+		},
+		writing(async ({ ids }) => {
+			const result = await tasks.completeMany(ids);
+			return { tasks: result.tasks.map(serializeTask), next: result.next.map(serializeTask) };
+		})
+	);
+
+	server.registerTool(
+		'reorder_tasks',
+		{
+			description:
+				'Set the manual order of tasks. Pass the complete list of task ids for a view in the order they should appear; each gets a position equal to its index. Tasks not listed keep their current position. New tasks are placed at the top.',
+			inputSchema: taskOrder
+		},
+		writing(async ({ ids }) => (await tasks.reorder(ids)).map(serializeTask))
 	);
 
 	server.registerTool(

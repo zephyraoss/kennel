@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Database } from './db';
 import {
@@ -30,14 +30,26 @@ export const taskInput = z.object({
 });
 
 export const taskPatch = taskInput.partial().extend({
-	status: z.enum(TASK_STATUSES).optional()
+	status: z.enum(TASK_STATUSES).optional(),
+	position: z.number().int().optional()
 });
 
 export const taskListQuery = z.object({
 	status: z.enum(TASK_STATUSES).optional(),
 	projectId: z.string().optional(),
-	label: z.string().optional()
+	label: z.string().optional(),
+	q: z.string().trim().min(1).max(200).optional(),
+	dueAfter: z.iso.datetime().optional(),
+	dueBefore: z.iso.datetime().optional()
 });
+
+const taskIds = z.array(z.string()).min(1).max(200);
+
+export const bulkTaskPatch = taskPatch
+	.pick({ status: true, priority: true, projectId: true, labels: true, dueAt: true })
+	.extend({ ids: taskIds });
+
+export const taskOrder = z.object({ ids: taskIds });
 
 export const projectInput = z.object({ name: z.string().trim().min(1).max(100) });
 
@@ -60,6 +72,7 @@ export type Backup = z.infer<typeof backup>;
 export type TaskInput = z.infer<typeof taskInput>;
 export type TaskPatch = z.infer<typeof taskPatch>;
 export type TaskListQuery = z.infer<typeof taskListQuery>;
+export type BulkTaskPatch = z.infer<typeof bulkTaskPatch>;
 
 export const serializeTask = (t: Task) => ({
 	id: t.id,
@@ -71,6 +84,7 @@ export const serializeTask = (t: Task) => ({
 	priority: t.priority,
 	dueAt: t.dueAt?.toISOString() ?? null,
 	repeat: t.repeat ?? null,
+	position: t.position,
 	completedAt: t.completedAt?.toISOString() ?? null,
 	createdAt: t.createdAt.toISOString(),
 	updatedAt: t.updatedAt.toISOString()
@@ -87,6 +101,8 @@ export type SerializedProject = ReturnType<typeof serializeProject>;
 
 const toDate = (value: string | null | undefined) =>
 	value === undefined ? undefined : value === null ? null : new Date(value);
+
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 const chunk = <T>(items: T[], size: number) =>
 	Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
@@ -147,11 +163,37 @@ export const createTaskService = (db: Database, userId: string) => {
 				sql`exists (select 1 from json_each(${task.labels}) where value = ${filter.label})`
 			);
 		}
+		if (filter.q) {
+			const pattern = `%${escapeLike(filter.q)}%`;
+			conditions.push(
+				or(
+					sql`${task.title} like ${pattern} escape '\\'`,
+					sql`${task.notes} like ${pattern} escape '\\'`
+				)!
+			);
+		}
+		if (filter.dueAfter) conditions.push(gte(task.dueAt, new Date(filter.dueAfter)));
+		if (filter.dueBefore) conditions.push(lte(task.dueAt, new Date(filter.dueBefore)));
 		return db
 			.select()
 			.from(task)
 			.where(and(...conditions))
-			.orderBy(asc(task.status), desc(task.createdAt));
+			.orderBy(asc(task.status), asc(task.position), desc(task.createdAt));
+	};
+
+	const labels = async () => {
+		const rows = await db.all<{ name: string; count: number }>(
+			sql`select value as name, count(*) as count from ${task}, json_each(${task.labels}) where ${task.userId} = ${userId} group by value order by count desc, value asc`
+		);
+		return rows;
+	};
+
+	const topPosition = async () => {
+		const [row] = await db
+			.select({ min: sql<number | null>`min(${task.position})` })
+			.from(task)
+			.where(eq(task.userId, userId));
+		return (row?.min ?? 0) - 1;
 	};
 
 	const get = async (id: string) =>
@@ -170,7 +212,8 @@ export const createTaskService = (db: Database, userId: string) => {
 				projectId: input.projectId ?? null,
 				priority: input.priority ?? 'none',
 				dueAt: toDate(input.dueAt) ?? null,
-				repeat: input.repeat ?? null
+				repeat: input.repeat ?? null,
+				position: await topPosition()
 			})
 			.returning();
 		return row;
@@ -189,7 +232,8 @@ export const createTaskService = (db: Database, userId: string) => {
 				projectId: completed.projectId,
 				priority: completed.priority,
 				dueAt: nextOccurrence(completed.dueAt, completed.repeat, now),
-				repeat: completed.repeat
+				repeat: completed.repeat,
+				position: completed.position
 			})
 			.returning();
 		return row;
@@ -211,6 +255,7 @@ export const createTaskService = (db: Database, userId: string) => {
 				dueAt: toDate(patch.dueAt),
 				repeat: patch.repeat,
 				status: patch.status,
+				position: patch.position,
 				completedAt
 			})
 			.where(owned(id))
@@ -222,6 +267,32 @@ export const createTaskService = (db: Database, userId: string) => {
 	const update = async (id: string, patch: TaskPatch) => (await apply(id, patch))?.row ?? null;
 
 	const complete = async (id: string) => apply(id, { status: 'done' });
+
+	const updateMany = async ({ ids, ...patch }: BulkTaskPatch) => {
+		await assertProject(patch.projectId);
+		const results = await Promise.all([...new Set(ids)].map((id) => apply(id, patch)));
+		const applied = results.filter((r) => r !== null);
+		return {
+			tasks: applied.map((r) => r.row),
+			next: applied.flatMap((r) => (r.next ? [r.next] : []))
+		};
+	};
+
+	const completeMany = (ids: string[]) => updateMany({ ids, status: 'done' });
+
+	const reorder = async (ids: string[]) => {
+		const ordered = [...new Set(ids)];
+		const statements = ordered.map((id, position) =>
+			db.update(task).set({ position }).where(owned(id))
+		);
+		await db.batch(statements as [(typeof statements)[0], ...typeof statements]);
+		const rows = await db
+			.select()
+			.from(task)
+			.where(and(eq(task.userId, userId), inArray(task.id, ordered)))
+			.orderBy(asc(task.position));
+		return rows;
+	};
 
 	const remove = async (id: string) => {
 		const rows = await db.delete(task).where(owned(id)).returning({ id: task.id });
@@ -267,7 +338,21 @@ export const createTaskService = (db: Database, userId: string) => {
 		return { projects: projectRows.length, tasks: taskRows.length };
 	};
 
-	return { list, get, create, update, complete, remove, projects, exportAll, importAll };
+	return {
+		list,
+		labels,
+		get,
+		create,
+		update,
+		updateMany,
+		complete,
+		completeMany,
+		reorder,
+		remove,
+		projects,
+		exportAll,
+		importAll
+	};
 };
 
 export type TaskService = ReturnType<typeof createTaskService>;

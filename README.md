@@ -38,13 +38,13 @@ Base path is `/api/v1`.
 
 `GET /tasks` filters on `?status=open|done`, `?projectId=`, and `?label=`. Projects follow the same shape at `/projects` (GET, POST) and `/projects/:id` (GET, PATCH, DELETE).
 
-A task has `title`, `notes`, `priority` (`none`, `low`, `medium`, or `high`), `dueAt` as an ISO 8601 string, `repeat` (`{ "every": "day" | "week" | "month", "interval": 1 }` or null), `labels` as a string array, `projectId`, and `status` (`open` or `done`). Completing a task with `repeat` set creates the next instance, with `dueAt` advanced from the previous one until it lands in the future.
+A task has `title`, `notes`, `priority` (`none`, `low`, `medium`, or `high`), `dueAt` as an ISO 8601 string, `repeat` (`{ "every": "day" | "week" | "month", "interval": 1 }` or null), `labels` as a string array, `projectId`, `position` (an integer sort key, lower first), and `status` (`open` or `done`). Completing a task with `repeat` set creates the next instance, with `dueAt` advanced from the previous one until it lands in the future.
 
 ## MCP
 
 The streamable HTTP endpoint is `/mcp`. An unauthenticated request gets an RFC 9728 challenge back, which is how MCP clients find the OAuth flow on their own. API keys work here too.
 
-Tools: `list_tasks`, `get_task`, `create_task`, `update_task`, `complete_task`, `delete_task`, `list_projects`, `create_project`, `delete_project`.
+Tools: `list_tasks`, `get_task`, `create_task`, `update_task`, `complete_task`, `delete_task`, `update_tasks`, `complete_tasks`, `reorder_tasks`, `list_labels`, `list_projects`, `create_project`, `delete_project`.
 
 ## Scripts
 
