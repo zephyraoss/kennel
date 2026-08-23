@@ -54,7 +54,7 @@
 							class="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
 							aria-hidden="true"
 						></span>
-						Revoke
+						Revoke<span class="sr-only"> {app.name}</span>
 					</button>
 				</form>
 			</li>
@@ -78,17 +78,23 @@
 	</dl>
 
 	<form method="POST" action="?/create" use:enhance class="mb-6 space-y-2">
-		<Input name="name" placeholder="Client name" required />
-		<Textarea name="redirect_uris" placeholder="Redirect URIs, one per line" rows={2} required />
+		<Input name="name" placeholder="Client name" aria-label="Client name" required />
+		<Textarea
+			name="redirect_uris"
+			placeholder="Redirect URIs, one per line"
+			aria-label="Redirect URIs, one per line"
+			rows={2}
+			required
+		/>
 		<Button type="submit">Create client</Button>
 	</form>
 
 	{#if form?.message}
-		<p class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
+		<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
 	{/if}
 
 	{#if form?.created}
-		<div class="mb-6 space-y-1 rounded-md border p-3 text-base sm:text-sm">
+		<div role="status" class="mb-6 space-y-1 rounded-md border p-3 text-base sm:text-sm">
 			<p>Client <strong>{form.created.name}</strong> created. The secret is only shown once.</p>
 			<p>
 				<span class="text-muted-foreground">client_id</span>
@@ -129,7 +135,7 @@
 							class="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
 							aria-hidden="true"
 						></span>
-						Delete
+						Delete<span class="sr-only"> {client.name}</span>
 					</button>
 				</form>
 			</li>

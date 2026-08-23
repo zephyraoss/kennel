@@ -29,24 +29,20 @@
 	};
 </script>
 
-<Seo
-	title="kennel: Authorize app"
-	description="Let an app access your tasks."
-	noindex
-/>
+<Seo title="kennel: authorize app" description="Let an app access your tasks." noindex />
 
 <main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6">
 	<div class="space-y-1">
 		<h1 class="text-xl font-semibold">Authorize {data.clientName}</h1>
 		<p class="text-base text-muted-foreground sm:text-sm">Signed in as {data.user?.name}</p>
 	</div>
-	<ul class="space-y-1 text-base sm:text-sm">
+	<ul class="list-disc space-y-1 pl-5 text-base sm:text-sm">
 		{#each data.scopes as scope (scope)}
-			<li>• {descriptions[scope] ?? scope}</li>
+			<li>{descriptions[scope] ?? scope}</li>
 		{/each}
 	</ul>
 	{#if failure}
-		<p class="text-base text-destructive sm:text-sm">{failure}</p>
+		<p role="alert" class="text-base text-destructive sm:text-sm">{failure}</p>
 	{/if}
 	<div class="flex gap-2">
 		<Button variant="outline" class="flex-1" disabled={pending} onclick={() => decide(false)}

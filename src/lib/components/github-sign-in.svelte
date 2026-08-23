@@ -11,6 +11,6 @@
 	};
 </script>
 
-<Button onclick={signIn} disabled={pending} class="w-full">
+<Button onclick={signIn} disabled={pending} aria-busy={pending} class="w-full">
 	{pending ? 'Redirecting…' : 'Continue with GitHub'}
 </Button>

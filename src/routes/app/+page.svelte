@@ -20,11 +20,17 @@
 		`rounded-md px-2 py-1.5 text-base sm:py-1 sm:text-sm ${active ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
 </script>
 
-<nav class="mb-6 flex flex-wrap items-center gap-1">
-	<a href={resolve('/app')} class={tabClass(!data.activeProjectId)}>All</a>
+<nav aria-label="Projects" class="mb-6 flex flex-wrap items-center gap-1">
+	<a
+		href={resolve('/app')}
+		class={tabClass(!data.activeProjectId)}
+		aria-current={!data.activeProjectId ? 'page' : undefined}>All</a
+	>
 	{#each data.projects as p (p.id)}
-		<a href="{resolve('/app')}?project={p.id}" class={tabClass(p.id === data.activeProjectId)}
-			>{p.name}</a
+		<a
+			href="{resolve('/app')}?project={p.id}"
+			class={tabClass(p.id === data.activeProjectId)}
+			aria-current={p.id === data.activeProjectId ? 'page' : undefined}>{p.name}</a
 		>
 	{/each}
 	{#if addingProject}
@@ -38,7 +44,14 @@
 				}}
 			class="flex items-center gap-1"
 		>
-			<Input name="name" placeholder="Project name" class="h-8 w-36 sm:w-40" required autofocus />
+			<Input
+				name="name"
+				placeholder="Project name"
+				aria-label="Project name"
+				class="h-8 w-36 sm:w-40"
+				required
+				autofocus
+			/>
 			<Button type="submit" size="sm" variant="ghost">Add</Button>
 			<Button type="button" size="sm" variant="ghost" onclick={() => (addingProject = false)}
 				>Cancel</Button
@@ -53,14 +66,14 @@
 		<form method="POST" action="?/deleteProject" use:enhance class="ml-auto">
 			<input type="hidden" name="id" value={activeProject.id} />
 			<button type="submit" class="text-sm text-muted-foreground hover:text-destructive sm:text-xs"
-				>Delete project</button
+				>Delete project<span class="sr-only"> {activeProject.name}</span></button
 			>
 		</form>
 	{/if}
 </nav>
 
 {#if form?.action === 'createProject'}
-	<p class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
+	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
 {/if}
 
 <form
@@ -80,6 +93,7 @@
 		<Input
 			name="title"
 			placeholder={activeProject ? `Add a task to ${activeProject.name}` : 'Add a task'}
+			aria-label={activeProject ? `Add a task to ${activeProject.name}` : 'Add a task'}
 			required
 			bind:value={title}
 			class="flex-1 border-0 shadow-none focus-visible:ring-0"
@@ -91,20 +105,21 @@
 			class="text-muted-foreground"
 			onclick={() => (expanded = !expanded)}
 			aria-expanded={expanded}
+			aria-controls="task-details"
 		>
-			{expanded ? 'Less' : 'More'}
+			{expanded ? 'Less' : 'More'}<span class="sr-only"> task details</span>
 		</Button>
 		<Button type="submit" size="sm" disabled={!title.trim()}>Add</Button>
 	</div>
 	{#if expanded}
-		<div class="mt-3">
+		<div id="task-details" class="mt-3">
 			<TaskFields projects={data.projects} projectId={data.activeProjectId} />
 		</div>
 	{:else}
 		<input type="hidden" name="projectId" value={data.activeProjectId ?? ''} />
 	{/if}
 	{#if form?.action === 'create'}
-		<p class="mt-2 text-base text-destructive sm:text-sm">{form.message}</p>
+		<p role="alert" class="mt-2 text-base text-destructive sm:text-sm">{form.message}</p>
 	{/if}
 </form>
 

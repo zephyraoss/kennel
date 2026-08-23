@@ -24,7 +24,7 @@
 			rel="noopener noreferrer"
 			class="hover:text-foreground"
 		>
-			github
+			github<span class="sr-only"> (opens in a new tab)</span>
 		</a>
 		<span aria-hidden="true">·</span>
 		<span class="tabular-nums">{__BUILD_ID__}</span>

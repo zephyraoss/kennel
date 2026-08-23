@@ -24,8 +24,10 @@
 		links.find((link) => link.href === page.url.pathname)?.label ?? 'Dashboard'
 	);
 
+	const isCurrent = (href: string) => page.url.pathname === href;
+
 	const linkClass = (href: string) =>
-		page.url.pathname === href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground';
+		isCurrent(href) ? 'text-foreground' : 'text-muted-foreground hover:text-foreground';
 
 	const signOut = async () => {
 		await authClient.signOut();
@@ -37,24 +39,34 @@
 	});
 </script>
 
-<Seo title="kennel: {pageLabel}" description="Your tasks and projects." noindex />
+<Seo title="kennel: {pageLabel.toLowerCase()}" description="Your tasks and projects." noindex />
 
 <div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-8">
+	<a
+		href="#main"
+		class="sr-only rounded-md bg-background px-3 py-2 focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50"
+	>
+		Skip to content
+	</a>
 	<header class="mb-8">
 		<div class="flex items-center justify-between gap-4">
-			<nav class="flex min-w-0 items-center gap-4 text-base sm:text-sm">
+			<nav aria-label="Main" class="flex min-w-0 items-center gap-4 text-base sm:text-sm">
 				<a href={resolve('/app')} class="font-semibold">kennel</a>
 				<div class="hidden items-center gap-4 lg:flex">
 					{#each links as link (link.href)}
-						<a href={link.href} class={linkClass(link.href)}>{link.label}</a>
+						<a
+							href={link.href}
+							class={linkClass(link.href)}
+							aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.label}</a
+						>
 					{/each}
 				</div>
 			</nav>
 			<div class="hidden items-center gap-4 text-sm lg:flex">
 				<span class="truncate text-muted-foreground">{data.user.name}</span>
-				<button type="button" class="text-muted-foreground hover:text-foreground" onclick={signOut}>
+				<Button variant="ghost" size="sm" class="text-muted-foreground" onclick={signOut}>
 					Sign out
-				</button>
+				</Button>
 			</div>
 			<Button
 				variant="ghost"
@@ -77,23 +89,28 @@
 			</Button>
 		</div>
 		{#if menuOpen}
-			<nav id="mobile-menu" class="mt-4 grid gap-1 border-t pt-4 text-base lg:hidden">
+			<nav
+				id="mobile-menu"
+				aria-label="Mobile"
+				class="mt-4 grid gap-1 border-t pt-4 text-base lg:hidden"
+			>
 				{#each links as link (link.href)}
-					<a href={link.href} class="rounded-md px-2 py-2.5 {linkClass(link.href)}">{link.label}</a>
+					<a
+						href={link.href}
+						class="rounded-md px-2 py-2.5 {linkClass(link.href)}"
+						aria-current={isCurrent(link.href) ? 'page' : undefined}>{link.label}</a
+					>
 				{/each}
 				<div class="mt-2 flex items-center justify-between gap-3 border-t pt-3">
 					<span class="truncate text-muted-foreground">{data.user.name}</span>
-					<button
-						type="button"
-						class="rounded-md px-2 py-2.5 text-muted-foreground hover:text-foreground"
-						onclick={signOut}
-					>
-						Sign out
-					</button>
+					<Button variant="ghost" class="text-muted-foreground" onclick={signOut}>Sign out</Button>
 				</div>
 			</nav>
 		{/if}
 	</header>
-	{@render children()}
+	<main id="main" class="flex flex-1 flex-col">
+		<h1 class="sr-only">{pageLabel}</h1>
+		{@render children()}
+	</main>
 	<SiteFooter />
 </div>

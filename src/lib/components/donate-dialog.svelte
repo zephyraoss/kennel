@@ -30,7 +30,7 @@
 				class={buttonVariants()}
 			>
 				<HeartIcon class="fill-current" aria-hidden="true" />
-				Donate
+				Donate<span class="sr-only"> (opens in a new tab)</span>
 			</a>
 		</div>
 	</Dialog.Content>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import Seo from '$lib/components/seo.svelte';
 	import { page } from '$app/state';
 
@@ -26,7 +27,7 @@
 		<a href={resolve('/')} class="font-semibold">kennel</a>
 		<a
 			href={data.user ? resolve('/app') : resolve('/login')}
-			class="text-muted-foreground hover:text-foreground"
+			class={buttonVariants({ variant: 'ghost', size: 'sm', class: 'text-muted-foreground' })}
 		>
 			{data.user ? 'Dashboard' : 'Sign in'}
 		</a>

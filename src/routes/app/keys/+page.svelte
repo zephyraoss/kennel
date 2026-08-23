@@ -23,16 +23,22 @@
 </section>
 
 <form method="POST" action="?/create" use:enhance class="mb-6 flex gap-2">
-	<Input name="name" placeholder="Key name (e.g. my-cli)" required class="min-w-0 flex-1" />
+	<Input
+		name="name"
+		placeholder="Key name (e.g. my-cli)"
+		aria-label="Key name"
+		required
+		class="min-w-0 flex-1"
+	/>
 	<Button type="submit" class="shrink-0">Create key</Button>
 </form>
 
 {#if form?.message}
-	<p class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
+	<p role="alert" class="mb-4 text-base text-destructive sm:text-sm">{form.message}</p>
 {/if}
 
 {#if form?.createdKey}
-	<div class="mb-6 rounded-md border p-3 text-base sm:text-sm">
+	<div role="status" class="mb-6 rounded-md border p-3 text-base sm:text-sm">
 		<p class="mb-1">
 			New key <strong>{form.createdName}</strong>. Copy it now. It won't be shown again.
 		</p>

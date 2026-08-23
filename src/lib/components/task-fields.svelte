@@ -25,7 +25,7 @@
 </script>
 
 <div class="grid gap-3">
-	<Textarea name="notes" placeholder="Notes" rows={2} value={notes ?? ''} />
+	<Textarea name="notes" placeholder="Notes" aria-label="Notes" rows={2} value={notes ?? ''} />
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 		<label class="grid min-w-0 gap-1 text-sm text-muted-foreground sm:text-xs">
 			Priority

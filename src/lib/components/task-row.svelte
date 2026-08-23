@@ -24,7 +24,7 @@
 
 	const priorityClass: Record<string, string> = {
 		high: 'text-destructive',
-		medium: 'text-amber-600 dark:text-amber-400',
+		medium: 'text-amber-700 dark:text-amber-400',
 		low: 'text-muted-foreground'
 	};
 
@@ -54,7 +54,7 @@
 			class="grid gap-3 rounded-md border p-3"
 		>
 			<input type="hidden" name="id" value={task.id} />
-			<Input name="title" value={task.title} required />
+			<Input name="title" aria-label="Title" value={task.title} required />
 			<TaskFields
 				{projects}
 				notes={task.notes}
@@ -64,7 +64,7 @@
 				projectId={task.projectId}
 			/>
 			{#if error}
-				<p class="text-base text-destructive sm:text-sm">{error}</p>
+				<p role="alert" class="text-base text-destructive sm:text-sm">{error}</p>
 			{/if}
 			<div class="flex items-center gap-2">
 				<Button type="submit" size="sm">Save</Button>
@@ -89,7 +89,7 @@
 				<input type="hidden" name="status" value={task.status} />
 				<button
 					type="submit"
-					aria-label={done ? 'Reopen' : 'Complete'}
+					aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
 					class="relative block size-5 rounded-full border border-foreground/40 transition-colors hover:border-foreground sm:size-4 {done
 						? 'bg-foreground/60'
 						: ''}"
@@ -101,8 +101,9 @@
 				</button>
 			</form>
 			<button type="button" class="min-w-0 flex-1 text-left" onclick={() => (editing = true)}>
+				<span class="sr-only">Edit</span>
 				<div class="text-base sm:text-sm {done ? 'text-muted-foreground line-through' : ''}">
-					{task.title}
+					{task.title}{#if done}<span class="sr-only"> (done)</span>{/if}
 				</div>
 				{#if task.notes}
 					<div
@@ -116,10 +117,14 @@
 						class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground sm:text-xs"
 					>
 						{#if task.priority !== 'none'}
-							<span class="capitalize {priorityClass[task.priority]}">{task.priority}</span>
+							<span class="capitalize {priorityClass[task.priority]}"
+								>{task.priority}<span class="sr-only"> priority</span></span
+							>
 						{/if}
 						{#if due}
-							<span class={due.overdue ? 'text-destructive' : ''}>{due.text}</span>
+							<span class={due.overdue ? 'text-destructive' : ''}
+								>{due.text}{#if due.overdue}<span class="sr-only"> (overdue)</span>{/if}</span
+							>
 						{/if}
 						{#each task.labels as label (label)}
 							<span class="rounded bg-muted px-1.5 py-0.5">{label}</span>
