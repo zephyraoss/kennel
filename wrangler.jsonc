@@ -2,7 +2,10 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "kennel",
 	"compatibility_date": "2026-08-23",
-	"compatibility_flags": ["nodejs_als", "nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_als",
+		"nodejs_compat"
+	],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
@@ -14,10 +17,12 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	"keep_vars": true,
 	"d1_databases": [
 		{
 			"binding": "D1",
-			"database_name": "kennel"
+			"database_name": "kennel",
+			"database_id": "86569827-ee9c-4e33-84ac-8cc16edf68f5"
 		}
 	]
 }
