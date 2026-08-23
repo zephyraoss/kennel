@@ -1,6 +1,6 @@
 # kennel
 
-A task list with no required UI. Talk to it over a REST API, over a remote MCP server, or through the dashboard if you'd rather click. SvelteKit on Cloudflare Workers, D1 for storage, better-auth for auth, drizzle for the schema.
+kennel is a simple task list. Talk to it over a REST API, over a remote MCP server, or through the dashboard if you'd rather click.
 
 ## Setup
 
@@ -45,3 +45,7 @@ Tools: `list_tasks`, `get_task`, `create_task`, `update_task`, `complete_task`, 
 ## Scripts
 
 `pnpm run auth:gen` regenerates `src/lib/server/db/schema/auth.ts` from the better-auth plugins configured in `auth.cli.ts`. `pnpm run db:gen` runs that and then creates a drizzle migration, so it's the one to reach for after changing auth config.
+
+## License
+
+AGPL-3.0. See [LICENSE](LICENSE).
