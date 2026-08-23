@@ -333,19 +333,25 @@
 		</span>
 		{#if entry.apps?.length}
 			<span
-				class="absolute right-2 bottom-2 flex flex-row-reverse -space-x-2 space-x-reverse transition-all group-hover/card:space-x-1"
+				class="absolute right-2 bottom-2 flex"
 				aria-label="Used by {entry.apps.map((a) => a.name).join(', ')}"
 			>
-				{#each [...entry.apps].reverse() as app (app.name)}
-					<span class="group/avatar relative">
+				{#each entry.apps as app, i (app.name)}
+					<span
+						class="group/avatar relative transition-[margin,transform] duration-200 ease-out hover:-translate-y-0.5 {i >
+						0
+							? '-ml-2 group-hover/card:ml-1'
+							: ''}"
+						style="z-index: {entry.apps.length - i}"
+					>
 						<img
 							src={app.logo}
 							alt={app.name}
-							class="size-5 rounded-full bg-white p-0.5 ring-2 ring-background"
+							class="size-5 rounded-full bg-white p-0.5 ring-2 ring-background transition-transform duration-200 group-hover/avatar:scale-110"
 						/>
 						<span
 							role="tooltip"
-							class="pointer-events-none absolute right-0 bottom-full mb-1.5 hidden rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-background group-hover/avatar:block"
+							class="pointer-events-none absolute right-0 bottom-full mb-1.5 rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap text-background opacity-0 transition-opacity duration-150 group-hover/avatar:opacity-100"
 						>
 							{app.name}
 						</span>
