@@ -153,7 +153,7 @@
 				{/snippet}
 			</Popover.Trigger>
 			<Popover.Content align="start" class="w-auto items-center gap-0 p-0">
-				<div class="flex flex-wrap justify-center gap-1 px-3 pt-3">
+				<div class="flex justify-center gap-1 px-3 pt-3">
 					{#each dueQuickPicks as pick (pick.label)}
 						<Button
 							type="button"
@@ -165,20 +165,24 @@
 							}}>{pick.label}</Button
 						>
 					{/each}
-					{#if due}
+				</div>
+				<Calendar type="single" bind:value={due} onValueChange={() => (dueOpen = false)} />
+				{#if due}
+					<div class="w-full border-t p-1">
 						<Button
 							type="button"
 							variant="ghost"
-							size="xs"
-							class="text-muted-foreground"
+							size="sm"
+							class="w-full text-muted-foreground"
 							onclick={() => {
 								due = undefined;
 								dueOpen = false;
-							}}>Clear</Button
+							}}
 						>
-					{/if}
-				</div>
-				<Calendar type="single" bind:value={due} onValueChange={() => (dueOpen = false)} />
+							Clear date
+						</Button>
+					</div>
+				{/if}
 			</Popover.Content>
 		</Popover.Root>
 
