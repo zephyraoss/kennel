@@ -3,3 +3,7 @@ BETTER_AUTH_URL=http://localhost:5173
 BETTER_AUTH_SECRET=change-me-to-a-long-random-string
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+# pnpm dlx @pushforge/builder vapid
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com

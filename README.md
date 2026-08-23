@@ -5,10 +5,14 @@ kennel is a simple task list. Talk to it over a REST API, over a remote MCP serv
 ## Setup
 
 1. Create a GitHub OAuth app with callback `http://localhost:5173/api/auth/callback/github`.
-2. Copy `.dev.vars.example` to `.dev.vars` and fill in the values.
+2. Copy `.dev.vars.example` to `.dev.vars` and fill in the values. Generate the VAPID pair with `pnpm dlx @pushforge/builder vapid`; the private key is the whole JWK JSON on one line.
 3. `pnpm install && pnpm run db:migrate && pnpm dev`
 
-For production, set the same four variables as worker secrets with `wrangler secret put`, create the D1 database, run `pnpm run db:migrate:remote`, then `pnpm run cf:deploy`.
+For production, set the same variables as worker secrets with `wrangler secret put`, create the D1 database, run `pnpm run db:migrate:remote`, then `pnpm run cf:deploy`.
+
+## Reminders
+
+A cron trigger on the same worker runs every 15 minutes (see `triggers.crons` in `wrangler.jsonc`) and sends a web push notification the day before a task is due and again when it's due. Users opt in per device from the settings page. `vite dev` doesn't run cron triggers; use `pnpm run preview` (which is `wrangler dev`) with `--test-scheduled` and hit `/__scheduled` to run one by hand.
 
 ## Authentication
 

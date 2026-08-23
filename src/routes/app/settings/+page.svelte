@@ -17,9 +17,21 @@
 	const feedback = (action: string) => (form?.action === action ? form.message : null);
 	const feedbackClass = page.status >= 400 ? 'text-destructive' : 'text-muted-foreground';
 
+	let busy = $state(false);
+
+	$effect(() => {
+		notifications.refresh();
+	});
+
 	const toggleNotifications = async () => {
-		if (notifications.enabled) notifications.disable();
-		else await notifications.enable();
+		if (!data.vapidPublicKey) return;
+		busy = true;
+		try {
+			if (notifications.enabled) await notifications.disable();
+			else await notifications.enable(data.vapidPublicKey);
+		} finally {
+			busy = false;
+		}
 	};
 </script>
 
@@ -54,8 +66,11 @@
 		<h2 class="font-semibold">Notifications</h2>
 		{#if !notifications.supported}
 			<p class="text-muted-foreground">
-				This browser doesn't support notifications. On iOS, add kennel to your home screen first.
+				This browser doesn't support push notifications. On iOS, add kennel to your home screen
+				first.
 			</p>
+		{:else if !data.vapidPublicKey}
+			<p class="text-muted-foreground">Push notifications aren't configured on this server.</p>
 		{:else if notifications.permission === 'denied' && !notifications.enabled}
 			<p class="text-muted-foreground">
 				Notifications are blocked for this site. Allow them in your browser settings to turn them
@@ -63,17 +78,27 @@
 			</p>
 		{:else}
 			<p class="text-muted-foreground">
-				Get a reminder for overdue and due-today tasks whenever you open kennel on this device.
+				Get a push notification on this device the day before a task is due, and again when it's
+				due, even when kennel isn't open.
 			</p>
-			<div>
+			<div class="flex flex-wrap gap-2">
 				<Button
 					variant={notifications.enabled ? 'outline' : 'default'}
 					onclick={toggleNotifications}
+					disabled={busy || !notifications.ready}
 					aria-pressed={notifications.enabled}
 				>
 					{notifications.enabled ? 'Turn off reminders' : 'Turn on reminders'}
 				</Button>
+				{#if notifications.enabled}
+					<form method="POST" action="?/testNotification" use:enhance>
+						<Button type="submit" variant="ghost">Send a test</Button>
+					</form>
+				{/if}
 			</div>
+			{#if feedback('test')}
+				<p role="status" class={feedbackClass}>{feedback('test')}</p>
+			{/if}
 		{/if}
 	</section>
 

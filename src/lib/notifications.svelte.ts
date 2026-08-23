@@ -1,60 +1,64 @@
 import { browser } from '$app/environment';
 
-const PREFERENCE_KEY = 'kennel:notifications';
-const NOTIFIED_KEY = 'kennel:notified';
+const SUBSCRIBE_URL = '/app/push';
 
-export type DueTask = { id: string; title: string; dueAt: string };
+const supported = () =>
+	browser && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 
-const supported = () => browser && 'Notification' in window && 'serviceWorker' in navigator;
+const decodeKey = (base64url: string) => {
+	const padded = base64url.padEnd(base64url.length + ((4 - (base64url.length % 4)) % 4), '=');
+	const binary = atob(padded.replaceAll('-', '+').replaceAll('_', '/'));
+	return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+};
 
-const readPreference = () => browser && localStorage.getItem(PREFERENCE_KEY) === 'on';
+const send = (method: 'POST' | 'DELETE', body: unknown) =>
+	fetch(SUBSCRIBE_URL, {
+		method,
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(body)
+	});
 
 const createNotifications = () => {
-	let enabled = $state(readPreference());
+	let enabled = $state(false);
+	let ready = $state(false);
 	let permission = $state<NotificationPermission>(supported() ? Notification.permission : 'denied');
 
-	const enable = async () => {
+	const currentSubscription = async () => {
+		const registration = await navigator.serviceWorker.ready;
+		return registration.pushManager.getSubscription();
+	};
+
+	const refresh = async () => {
+		if (!supported()) return;
+		enabled = (await currentSubscription()) !== null;
+		ready = true;
+	};
+
+	const enable = async (vapidPublicKey: string) => {
 		if (!supported()) return false;
 		permission = await Notification.requestPermission();
-		enabled = permission === 'granted';
-		localStorage.setItem(PREFERENCE_KEY, enabled ? 'on' : 'off');
-		return enabled;
-	};
-
-	const disable = () => {
-		enabled = false;
-		if (browser) localStorage.setItem(PREFERENCE_KEY, 'off');
-	};
-
-	const alreadyNotified = (): Record<string, string> => {
-		try {
-			return JSON.parse(localStorage.getItem(NOTIFIED_KEY) ?? '{}');
-		} catch {
-			return {};
-		}
-	};
-
-	const remind = async (tasks: DueTask[]) => {
-		if (!enabled || permission !== 'granted' || tasks.length === 0) return;
-		const today = new Date().toDateString();
-		const notified = alreadyNotified();
-		const pending = tasks.filter((t) => notified[t.id] !== today);
-		if (pending.length === 0) return;
+		if (permission !== 'granted') return false;
 		const registration = await navigator.serviceWorker.ready;
-		const title = pending.length === 1 ? pending[0].title : `${pending.length} tasks due`;
-		const body =
-			pending.length === 1
-				? `Due ${new Date(pending[0].dueAt).toLocaleDateString()}`
-				: pending.map((t) => t.title).join(', ');
-		await registration.showNotification(title, {
-			body,
-			icon: '/icon-192.png',
-			badge: '/icon-192.png',
-			tag: 'kennel-due'
+		const subscription = await registration.pushManager.subscribe({
+			userVisibleOnly: true,
+			applicationServerKey: decodeKey(vapidPublicKey)
 		});
-		const kept = Object.fromEntries(tasks.map((t) => [t.id, notified[t.id] ?? today]));
-		for (const t of pending) kept[t.id] = today;
-		localStorage.setItem(NOTIFIED_KEY, JSON.stringify(kept));
+		const response = await send('POST', subscription.toJSON());
+		if (!response.ok) {
+			await subscription.unsubscribe();
+			return false;
+		}
+		enabled = true;
+		return true;
+	};
+
+	const disable = async () => {
+		const subscription = await currentSubscription();
+		if (subscription) {
+			await send('DELETE', { endpoint: subscription.endpoint });
+			await subscription.unsubscribe();
+		}
+		enabled = false;
 	};
 
 	return {
@@ -64,12 +68,15 @@ const createNotifications = () => {
 		get enabled() {
 			return enabled;
 		},
+		get ready() {
+			return ready;
+		},
 		get permission() {
 			return permission;
 		},
+		refresh,
 		enable,
-		disable,
-		remind
+		disable
 	};
 };
 

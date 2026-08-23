@@ -29,6 +29,9 @@ importers:
       '@modelcontextprotocol/server':
         specifier: ^2.0.0
         version: 2.0.0
+      '@pushforge/builder':
+        specifier: 2.0.5
+        version: 2.0.5
       '@resvg/resvg-wasm':
         specifier: ^2.6.2
         version: 2.6.2
@@ -1058,6 +1061,11 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
+
+  '@pushforge/builder@2.0.5':
+    resolution: {integrity: sha512-9Q6lBFWUMKUL5vBknwAt+nlS7eWCrNuf1lCMAhC1Iypn8gtYJ0rdVHAnsGFMxPKhbtgkgpU3r6UVduDTQ8jgzw==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
 
   '@resvg/resvg-wasm@2.6.2':
     resolution: {integrity: sha512-FqALmHI8D4o6lk/LRWDnhw95z5eO+eAa6ORjVg09YRR7BkcM6oPHU9uyC0gtQG5vpFLvgpeU4+zEAz2H8APHNw==}
@@ -3224,6 +3232,8 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
+
+  '@pushforge/builder@2.0.5': {}
 
   '@resvg/resvg-wasm@2.6.2': {}
 

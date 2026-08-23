@@ -8,7 +8,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import SiteFooter from '$lib/components/site-footer.svelte';
 	import Seo from '$lib/components/seo.svelte';
-	import { notifications } from '$lib/notifications.svelte';
 
 	let { data, children } = $props();
 
@@ -28,10 +27,6 @@
 			? 'Settings'
 			: (links.find((link) => link.href === page.url.pathname)?.label ?? 'Dashboard')
 	);
-
-	$effect(() => {
-		notifications.remind(data.dueTasks);
-	});
 
 	const isCurrent = (href: string) => page.url.pathname === href;
 
