@@ -58,6 +58,7 @@
 
 	const saveForm = $derived(updateTask.for(task.id));
 	const removeForm = $derived(deleteTask.for(task.id));
+	const toggleForm = $derived(toggleTask.for(task.id));
 	const removeFormId = $derived(`delete-task-${task.id}`);
 
 	const save = async (form: { element: HTMLFormElement; submit(): Promise<boolean> }) => {
@@ -118,7 +119,7 @@
 	{:else}
 		<div class="flex items-start gap-3">
 			<form
-				{...toggleTask.enhance(async (form) => {
+				{...toggleForm.enhance(async (form) => {
 					const settle = optimistic.patch(task.id, {
 						status: done ? 'open' : 'done',
 						completedAt: done ? null : new Date().toISOString()
