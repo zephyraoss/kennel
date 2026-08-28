@@ -5,7 +5,10 @@ import { createAuth } from '$lib/server/auth';
 import { getDrizzle } from '$lib/server/db';
 
 const isHeadlessRoute = (pathname: string) =>
-	pathname === '/mcp' || pathname.startsWith('/api/v1/') || pathname.startsWith('/.well-known/');
+	pathname === '/mcp' ||
+	pathname === '/openapi.json' ||
+	pathname.startsWith('/api/v1/') ||
+	pathname.startsWith('/.well-known/');
 
 const isAuthRoute = (pathname: string) => pathname.startsWith('/api/auth/');
 

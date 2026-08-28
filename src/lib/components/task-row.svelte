@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import type { RemoteFormEnhanceInstance } from '@sveltejs/kit';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import TaskFields from '$lib/components/task-fields.svelte';
@@ -61,16 +63,20 @@
 	const toggleForm = $derived(toggleTask.for(task.id));
 	const removeFormId = $derived(`delete-task-${task.id}`);
 
-	const save = async (form: { element: HTMLFormElement; submit(): Promise<boolean> }) => {
+	const save = async (form: RemoteFormEnhanceInstance) => {
 		const values = taskValues(new FormData(form.element));
 		const settle = optimistic.patch(task.id, values);
-		if (await form.submit()) {
-			editing = false;
-			draft = null;
-		} else {
-			draft = values;
+		try {
+			if (await form.submit().updates()) {
+				editing = false;
+				draft = null;
+				await invalidateAll();
+			} else {
+				draft = values;
+			}
+		} finally {
+			settle();
 		}
-		settle();
 	};
 </script>
 
@@ -124,8 +130,11 @@
 						status: done ? 'open' : 'done',
 						completedAt: done ? null : new Date().toISOString()
 					});
-					await form.submit();
-					settle();
+					try {
+						if (await form.submit().updates()) await invalidateAll();
+					} finally {
+						settle();
+					}
 				})}
 				class="pt-0.5"
 			>

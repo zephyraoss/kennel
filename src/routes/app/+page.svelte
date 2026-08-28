@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -82,8 +83,12 @@
 		const settle = optimistic.create(draftTask(taskValues(new FormData(form.element))));
 		title = '';
 		fieldsKey += 1;
-		if (!(await form.submit())) title = submitted;
-		settle();
+		try {
+			if (await form.submit().updates()) await invalidateAll();
+			else title = submitted;
+		} finally {
+			settle();
+		}
 	})}
 	class="mb-8 grid gap-1 rounded-lg border p-1.5"
 >
